@@ -1,0 +1,9 @@
+// Törlendő fájlok:
+// - Forms/AdminDashboard.cs
+// - Forms/AdminDashboard.Designer.cs
+// - Forms/AssistantDashboard.cs
+// - Forms/AssistantDashboard.Designer.cs
+// - Forms/LoginForm.cs
+// - Forms/RegisterForm.cs
+// - Forms/UserDashboard.cs
+// - Forms/UserDashboard.Designer.cs 

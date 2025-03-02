@@ -1,0 +1,189 @@
+@model BerAuto.Models.Car
+
+@{
+    ViewData["Title"] = "Autó részletei";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>@Model.Make @Model.Model (@Model.Year)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Rendszám:</div>
+                        <div class="col-md-8">@Model.LicensePlate</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Gyártó:</div>
+                        <div class="col-md-8">@Model.Make</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Modell:</div>
+                        <div class="col-md-8">@Model.Model</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Évjárat:</div>
+                        <div class="col-md-8">@Model.Year</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Napi díj:</div>
+                        <div class="col-md-8">@Model.DailyRate Ft</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 font-weight-bold">Állapot:</div>
+                        <div class="col-md-8">
+                            @if (Model.IsAvailable)
+                            {
+                                <span class="badge bg-success">Elérhető</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Foglalt</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    @if (Model.IsAvailable)
+                    {
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rentalModal">
+                            Bérlés
+                        </button>
+                    }
+                    <a href="/" class="btn btn-secondary">Vissza</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4>Autó képe</h4>
+                </div>
+                <div class="card-body text-center">
+                    <img src="https://via.placeholder.com/400x300?text=@Model.Make+@Model.Model" alt="@Model.Make @Model.Model" class="img-fluid rounded" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bérlési Modal -->
+<div class="modal fade" id="rentalModal" tabindex="-1" aria-labelledby="rentalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rentalModalLabel">Autó bérlése</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rentalForm">
+                    <input type="hidden" id="carId" value="@Model.Id" />
+                    
+                    <div class="mb-3">
+                        <label for="customerId" class="form-label">Ügyfél</label>
+                        <select class="form-select" id="customerId" required>
+                            <option value="">Válasszon ügyfelet...</option>
+                            <!-- Az ügyfelek listája JavaScript segítségével töltődik be -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rentalDate" class="form-label">Bérlés kezdete</label>
+                        <input type="date" class="form-control" id="rentalDate" required min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="returnDate" class="form-label">Visszahozatal dátuma</label>
+                        <input type="date" class="form-control" id="returnDate" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="totalCost" class="form-label">Teljes költség</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="totalCost" readonly />
+                            <span class="input-group-text">Ft</span>
+                        </div>
+                        <small class="form-text text-muted">A költség automatikusan számolódik a dátumok alapján.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mégsem</button>
+                <button type="button" class="btn btn-primary" id="submitRental">Bérlés</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Ügyfelek betöltése
+        $(document).ready(function() {
+            $.ajax({
+                url: '/api/customers',
+                type: 'GET',
+                success: function(data) {
+                    var select = $('#customerId');
+                    $.each(data, function(i, customer) {
+                        select.append($('<option></option>').val(customer.id).text(customer.name));
+                    });
+                }
+            });
+            
+            // Dátumok változásakor számoljuk a költséget
+            $('#rentalDate, #returnDate').change(function() {
+                calculateCost();
+            });
+            
+            // Bérlés gomb eseménykezelője
+            $('#submitRental').click(function() {
+                if (!$('#rentalForm')[0].checkValidity()) {
+                    $('#rentalForm')[0].reportValidity();
+                    return;
+                }
+                
+                var rental = {
+                    carId: $('#carId').val(),
+                    customerId: $('#customerId').val(),
+                    rentalDate: $('#rentalDate').val(),
+                    returnDate: $('#returnDate').val(),
+                    totalCost: parseFloat($('#totalCost').val().replace(/\s/g, '')),
+                    isCompleted: false
+                };
+                
+                $.ajax({
+                    url: '/api/rentals',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(rental),
+                    success: function(data) {
+                        alert('Sikeres bérlés!');
+                        window.location.href = '/';
+                    },
+                    error: function(xhr) {
+                        alert('Hiba történt: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+        
+        // Költség számítása
+        function calculateCost() {
+            var rentalDate = new Date($('#rentalDate').val());
+            var returnDate = new Date($('#returnDate').val());
+            
+            if (rentalDate && returnDate && returnDate > rentalDate) {
+                var days = Math.ceil((returnDate - rentalDate) / (1000 * 60 * 60 * 24));
+                var dailyRate = @Model.DailyRate;
+                var totalCost = days * dailyRate;
+                
+                $('#totalCost').val(totalCost.toLocaleString('hu-HU'));
+            } else {
+                $('#totalCost').val('');
+            }
+        }
+    </script>
+} 

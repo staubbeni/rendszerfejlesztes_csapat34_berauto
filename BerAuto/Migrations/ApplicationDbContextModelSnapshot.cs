@@ -1,0 +1,1 @@
+// Ezt a fájlt is teljesen törölni kell 

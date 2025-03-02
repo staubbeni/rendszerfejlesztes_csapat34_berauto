@@ -1,0 +1,26 @@
+@model IEnumerable<BerAuto.Models.Car>
+
+@{
+    ViewData["Title"] = "Elérhető autók";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Üdvözöljük a BerAuto autókölcsönzőben!</h1>
+    <p>Válasszon az elérhető autóink közül:</p>
+</div>
+
+<div class="row">
+    @foreach (var car in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@car.Make @car.Model (@car.Year)</h5>
+                    <p class="card-text">Rendszám: @car.LicensePlate</p>
+                    <p class="card-text">Napi díj: @car.DailyRate Ft</p>
+                    <a href="/Home/CarDetails/@car.Id" class="btn btn-primary">Részletek</a>
+                </div>
+            </div>
+        </div>
+    }
+</div> 

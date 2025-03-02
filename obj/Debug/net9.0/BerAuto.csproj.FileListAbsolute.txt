@@ -1,0 +1,9 @@
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.csproj.AssemblyReference.cache
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.GeneratedMSBuildEditorConfig.editorconfig
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.AssemblyInfoInputs.cache
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.AssemblyInfo.cs
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.csproj.CoreCompileInputs.cache
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.MvcApplicationPartsAssemblyInfo.cs
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.MvcApplicationPartsAssemblyInfo.cache
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.RazorAssemblyInfo.cache
+E:\Suli\FlutProj\berauto\obj\Debug\net9.0\BerAuto.RazorAssemblyInfo.cs

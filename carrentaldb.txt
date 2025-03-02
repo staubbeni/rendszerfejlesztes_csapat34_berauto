@@ -1,0 +1,59 @@
+CREATE DATABASE CarRental;
+GO
+USE CarRental;
+GO
+
+-- Users table
+CREATE TABLE Users (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    address TEXT,
+    role VARCHAR(10) CHECK (role IN ('user', 'clerk', 'admin')) NOT NULL
+);
+
+-- Cars table
+CREATE TABLE Cars (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    license_plate VARCHAR(20) UNIQUE NOT NULL,
+    brand VARCHAR(50) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    year INT NOT NULL,
+    mileage INT NOT NULL,
+    status VARCHAR(20) CHECK (status IN ('available', 'under_maintenance', 'rented')) NOT NULL,
+    daily_rate DECIMAL(10,2) NOT NULL
+);
+
+-- Rentals table
+CREATE TABLE Rentals (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    car_id INT NOT NULL,
+    user_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status VARCHAR(20) CHECK (status IN ('pending', 'approved', 'returned')) NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (car_id) REFERENCES Cars(id),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+-- Invoices table
+CREATE TABLE Invoices (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    rental_id INT NOT NULL,
+    issue_date DATE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status VARCHAR(10) CHECK (status IN ('paid', 'due')) NOT NULL,
+    FOREIGN KEY (rental_id) REFERENCES Rentals(id)
+);
+
+-- Logs table
+CREATE TABLE Logs (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL,
+    action TEXT NOT NULL,
+    action_date DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
+);

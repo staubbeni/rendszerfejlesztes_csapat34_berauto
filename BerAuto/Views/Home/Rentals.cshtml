@@ -1,0 +1,33 @@
+@model IEnumerable<BerAuto.Models.Rental>
+
+@{
+    ViewData["Title"] = "Bérlések";
+}
+
+<h1>Aktuális bérlések</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Autó</th>
+            <th>Ügyfél</th>
+            <th>Bérlés kezdete</th>
+            <th>Visszahozatal</th>
+            <th>Teljes költség</th>
+            <th>Állapot</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var rental in Model)
+        {
+            <tr>
+                <td>@rental.Car?.Make @rental.Car?.Model</td>
+                <td>@rental.Customer?.Name</td>
+                <td>@rental.RentalDate.ToShortDateString()</td>
+                <td>@rental.ReturnDate.ToShortDateString()</td>
+                <td>@rental.TotalCost Ft</td>
+                <td>@(rental.IsCompleted ? "Befejezve" : "Folyamatban")</td>
+            </tr>
+        }
+    </tbody>
+</table> 

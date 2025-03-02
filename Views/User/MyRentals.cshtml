@@ -1,0 +1,47 @@
+@model IEnumerable<BerAuto.Models.Rental>
+
+@{
+    ViewData["Title"] = "Saját foglalások";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Autó</th>
+                <th>Kezdő dátum</th>
+                <th>Záró dátum</th>
+                <th>Állapot</th>
+                <th>Összeg</th>
+                <th>Műveletek</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rental in Model)
+            {
+                <tr>
+                    <td>@rental.Car.Brand @rental.Car.Model (@rental.Car.LicensePlate)</td>
+                    <td>@rental.StartDate.ToShortDateString()</td>
+                    <td>@rental.EndDate.ToShortDateString()</td>
+                    <td>@rental.Status</td>
+                    <td>@rental.TotalCost Ft</td>
+                    <td>
+                        @if (rental.Status == "Active")
+                        {
+                            <a asp-action="RentalDetails" asp-route-id="@rental.Id" class="btn btn-sm btn-primary">Részletek</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        Még nincs foglalása.
+    </div>
+} 
