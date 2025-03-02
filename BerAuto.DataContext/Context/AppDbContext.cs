@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using CarRentalApp.DataContext.Entities;
+using BerAuto.DataContext.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarRentalApp.DataContext.Context
+namespace BerAuto.DataContext.Context
 {
     public class AppDbContext : DbContext
     {

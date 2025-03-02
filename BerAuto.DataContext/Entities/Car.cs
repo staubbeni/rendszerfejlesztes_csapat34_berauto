@@ -1,4 +1,4 @@
-namespace CarRentalApp.DataContext.Entities
+namespace BerAuto.DataContext.Entities
 {
     public class Car
     {
