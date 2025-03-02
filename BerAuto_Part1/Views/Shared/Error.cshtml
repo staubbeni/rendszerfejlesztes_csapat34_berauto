@@ -1,0 +1,19 @@
+@model BerAuto.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Hiba";
+}
+
+<h1 class="text-danger">Hiba.</h1>
+<h2 class="text-danger">Hiba történt a kérés feldolgozása során.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Kérés azonosító:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>Fejlesztői mód</h3>
+<p>
+    A részletes hibaüzenetek megtekintéséhez váltson <strong>Fejlesztői</strong> környezetre.
+</p> 

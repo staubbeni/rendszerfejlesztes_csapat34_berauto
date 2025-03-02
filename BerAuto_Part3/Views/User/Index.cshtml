@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Felhasználói irányítópult";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Elérhető autók
+            </div>
+            <div class="card-body">
+                <p>Itt megtekintheti az elérhető autókat.</p>
+                <a asp-action="Cars" class="btn btn-primary">Autók</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Saját foglalások
+            </div>
+            <div class="card-body">
+                <p>Itt megtekintheti a saját foglalásait.</p>
+                <a asp-action="MyRentals" class="btn btn-primary">Foglalások</a>
+            </div>
+        </div>
+    </div>
+</div> 
