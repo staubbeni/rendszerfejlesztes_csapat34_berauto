@@ -1,3 +1,5 @@
+using BerAuto.DataContext.Entities;
+
 namespace BerAuto.DataContext.Entities
 {
     public class CarCategory
