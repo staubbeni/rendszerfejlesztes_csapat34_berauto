@@ -1,5 +1,7 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
+
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,14 +16,16 @@ namespace BerAuto.Services
     }
     public class AddressService : IAddressService
     {
-        private readonly AppDbcontext _addressService;
+        private readonly AppDbContext _context;
+
+
         public AddressService(AppDbContext context)
         {
             _context = context;
         }
-        public List<Address> List()
+        public List<Address> GetAllAddress()
         {
-            return _context.Address.ToList();
+            return _context.Addresses.ToList();
         }
     }
 }

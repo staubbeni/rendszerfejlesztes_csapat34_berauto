@@ -1,27 +1,22 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BerAuto.Services
+public interface IRoleService
 {
-    public interface IRoleService
+    List<Role> GetAllRoles();
+}
+
+public class RoleService : IRoleService 
+{
+    private readonly AppDbContext _context;
+
+    public RoleService(AppDbContext context)
     {
-        List<Role> GetAllRole();
+        _context = context;
     }
-    public class RoleServices : IRoleService
+
+    public List<Role> GetAllRoles()
     {
-        private readonly AppDbContext _context;
-        public RoleServices(AppDbContext context)
-        {
-            _context = context;
-        }
-        public List<Role> List()
-        {
-            return _context.Roles.ToList();
-        }
+        return _context.Roles.ToList();
     }
 }

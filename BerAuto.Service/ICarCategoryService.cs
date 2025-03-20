@@ -1,30 +1,22 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BerAuto.Services
+public interface ICarCategoryService
 {
-    public interface ICarCategoryService
+    List<CarCategory> GetAllCarCategories();
+}
+
+public class CarCategoryService : ICarCategoryService
+{
+    private readonly AppDbContext _context;
+
+    public CarCategoryService(AppDbContext context)
     {
-        List<CarCategory> GetAllCarCategories();
+        _context = context;
     }
 
-    public class CarCategoryService : ICarCategoryService
+    public List<CarCategory> GetAllCarCategories() 
     {
-        private readonly AppDbContext _context;
-
-        public CarCategoryService(AppDbContext context)
-        {
-            _context = context;
-        }
-        public List<CarCategory> List()
-        {
-            return _context.CarCategories.ToList();
-        }
+        return _context.CarCategories.ToList();
     }
-
 }

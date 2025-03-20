@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using BerAuto.Service;
+using BerAuto.Services;
 
 namespace BerAuto.Controllers
 {
@@ -9,15 +9,15 @@ namespace BerAuto.Controllers
     {
         private readonly IRoleService _roleService;
 
-        public RoleController(IRoleService RoleService)
+        public RoleController(IRoleService roleService)
         {
-            _roleService = RoleService;
+            _roleService = roleService;
         }
 
         [HttpGet]
         public IActionResult List()
         {
-            var result = _carService.GetAllRoles();
+            var result = _roleService.GetAllRoles(); 
             return Ok(result);
         }
     }

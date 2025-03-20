@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using BerAuto.Service;
+using BerAuto.Services;
 
 namespace BerAuto.Controllers
 {

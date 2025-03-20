@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using BerAuto.Service;
+using BerAuto.Services;
 
 namespace BerAuto.Controllers
 {
@@ -17,7 +17,7 @@ namespace BerAuto.Controllers
         [HttpGet]
         public IActionResult List()
         {
-            var result = _userService.GetAllUser();
+            var result = _userService.GetAllUsers();
             return Ok(result);
         }
     }

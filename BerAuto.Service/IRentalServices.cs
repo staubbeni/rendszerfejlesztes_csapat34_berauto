@@ -1,28 +1,22 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BerAuto.Services
+public interface IRentalService
 {
-    public interface IRentalServices
+    List<Rental> GetAllRentals();
+}
+
+public class RentalService : IRentalService
+{
+    private readonly AppDbContext _context;
+
+    public RentalService(AppDbContext context)
     {
-        List<Rental> GetAllRental();
+        _context = context;
     }
 
-    public class RentalService : IRentalServices
+    public List<Rental> GetAllRentals() 
     {
-        private readonly AppDbContext _context;
-        public RentalService(AppDbContext context)
-        {
-            _context = context;
-        }
-        public List<Rental> List()
-        {
-            return _context.GetAllRental.ToList();
-        }
-    } 
+        return _context.Rentals.ToList();
+    }
 }

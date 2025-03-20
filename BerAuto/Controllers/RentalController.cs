@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using BerAuto.Service;
+using BerAuto.Services;
 
 namespace BerAuto.Controllers
 {
@@ -17,7 +17,7 @@ namespace BerAuto.Controllers
         [HttpGet]
         public IActionResult List()
         {
-            var result = _carService.GetAllRental();
+            var result = _rentalService.GetAllRentals();
             return Ok(result);
         }
     }
