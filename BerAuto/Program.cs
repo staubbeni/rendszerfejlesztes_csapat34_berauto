@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using BerAuto.DataContext.Context;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using BerAuto.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IRentalService, RentalService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<ICarCategoryService, CarCategoryService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();

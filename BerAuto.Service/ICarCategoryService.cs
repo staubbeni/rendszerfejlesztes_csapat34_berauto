@@ -1,22 +1,53 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
+using Microsoft.EntityFrameworkCore;
 
-public interface ICarCategoryService
+namespace BerAuto.Services
 {
-    List<CarCategory> GetAllCarCategories();
+    public interface ICarCategoryService
+    {
+        Task<List<CarCategory>> GetAllCategoriesAsync();
+        Task<CarCategory> GetCategoryByIdAsync(int id);
+        Task<CarCategory> AddCategoryAsync(CarCategory category);
+        Task UpdateCategoryAsync(CarCategory category);
+    }
 }
 
-public class CarCategoryService : ICarCategoryService
+
+namespace BerAuto.Services
 {
-    private readonly AppDbContext _context;
-
-    public CarCategoryService(AppDbContext context)
+    public class CarCategoryService : ICarCategoryService
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    public List<CarCategory> GetAllCarCategories() 
-    {
-        return _context.CarCategories.ToList();
+        public CarCategoryService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<CarCategory>> GetAllCategoriesAsync()
+        {
+            return await _context.CarCategories.ToListAsync();
+        }
+
+        public async Task<CarCategory> GetCategoryByIdAsync(int id)
+        {
+            return await _context.CarCategories
+                .Include(c => c.Cars)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task<CarCategory> AddCategoryAsync(CarCategory category)
+        {
+            _context.CarCategories.Add(category);
+            await _context.SaveChangesAsync();
+            return category;
+        }
+
+        public async Task UpdateCategoryAsync(CarCategory category)
+        {
+            _context.CarCategories.Update(category);
+            await _context.SaveChangesAsync();
+        }
     }
 }

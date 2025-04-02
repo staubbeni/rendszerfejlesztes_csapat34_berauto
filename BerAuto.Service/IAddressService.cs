@@ -12,20 +12,41 @@ namespace BerAuto.Services
 {
     public interface IAddressService
     {
-        List<Address> GetAllAddress();
+        Task<Address> AddAddressAsync(Address address);
+        Task<Address> GetAddressByUserIdAsync(int userId);
+        Task UpdateAddressAsync(Address address);
     }
+}
+
+
+namespace BerAuto.Services
+{
     public class AddressService : IAddressService
     {
         private readonly AppDbContext _context;
-
 
         public AddressService(AppDbContext context)
         {
             _context = context;
         }
-        public List<Address> GetAllAddress()
+
+        public async Task<Address> AddAddressAsync(Address address)
         {
-            return _context.Addresses.ToList();
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+            return address;
+        }
+
+        public async Task<Address> GetAddressByUserIdAsync(int userId)
+        {
+            return await _context.Addresses
+                .FirstOrDefaultAsync(a => a.UserId == userId);
+        }
+
+        public async Task UpdateAddressAsync(Address address)
+        {
+            _context.Addresses.Update(address);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -1,22 +1,45 @@
 ﻿using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Entities;
+using Microsoft.EntityFrameworkCore;
 
-public interface IRoleService
+namespace BerAuto.Services
 {
-    List<Role> GetAllRoles();
+    public interface IRoleService
+    {
+        Task<List<Role>> GetAllRolesAsync();
+        Task<Role> GetRoleByIdAsync(int id);
+        Task<Role> AddRoleAsync(Role role);
+    }
 }
 
-public class RoleService : IRoleService 
+namespace BerAuto.Services
 {
-    private readonly AppDbContext _context;
-
-    public RoleService(AppDbContext context)
+    public class RoleService : IRoleService
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    public List<Role> GetAllRoles()
-    {
-        return _context.Roles.ToList();
+        public RoleService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<Role>> GetAllRolesAsync()
+        {
+            return await _context.Roles.ToListAsync();
+        }
+
+        public async Task<Role> GetRoleByIdAsync(int id)
+        {
+            return await _context.Roles
+                .Include(r => r.Users)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task<Role> AddRoleAsync(Role role)
+        {
+            _context.Roles.Add(role);
+            await _context.SaveChangesAsync();
+            return role;
+        }
     }
 }
