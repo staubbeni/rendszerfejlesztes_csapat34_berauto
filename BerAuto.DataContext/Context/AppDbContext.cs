@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using BerAuto.DataContext.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BerAuto.DataContext.Context
 {
@@ -18,5 +13,15 @@ namespace BerAuto.DataContext.Context
         public DbSet<Address> Addresses { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Roles)
+                .WithMany(r => r.Users)
+                .UsingEntity(j => j.ToTable("UserRoles"));
+        }
     }
 }
