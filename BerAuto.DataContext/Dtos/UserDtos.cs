@@ -22,7 +22,7 @@ namespace BerAuto.DataContext.Dtos
     {
         [Required]
         [StringLength(50)]
-        public string Username { get; set; }
+        public string Name { get; set; }
 
         [Required]
         [EmailAddress]
@@ -37,6 +37,7 @@ namespace BerAuto.DataContext.Dtos
 
         public IList<int> RoleIds { get; set; }
     }
+
 
     public class UserLoginDto
     {
