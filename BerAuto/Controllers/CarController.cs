@@ -41,18 +41,18 @@ namespace BerAuto.Controllers
         // Csak Admin: új autó
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromBody] CarDto carDto)
+        public async Task<IActionResult> Create([FromBody] CarCreateDto carCreateDto)
         {
-            var created = await _carService.CreateCarAsync(carDto);
+            var created = await _carService.CreateCarAsync(carCreateDto);
             return CreatedAtAction(nameof(Details), new { id = created.Id }, created);
         }
 
         // Csak Admin: módosítás
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] CarDto carDto)
+        public async Task<IActionResult> Update(int id, [FromBody] CarUpdateDto carUpdateDto)
         {
-            var updated = await _carService.UpdateCarAsync(id, carDto);
+            var updated = await _carService.UpdateCarAsync(id, carUpdateDto);
             if (updated == null)
                 return NotFound();
             return Ok(updated);

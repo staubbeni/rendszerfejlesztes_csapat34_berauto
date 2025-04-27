@@ -13,8 +13,8 @@ namespace BerAuto.Services
     {
         Task<IEnumerable<CarDto>> GetAllCarsAsync();
         Task<CarDto> GetCarByIdAsync(int id);
-        Task<CarDto> CreateCarAsync(CarDto carDto);
-        Task<CarDto> UpdateCarAsync(int id, CarDto carDto);
+        Task<CarDto> CreateCarAsync(CarCreateDto carDto);
+        Task<CarDto> UpdateCarAsync(int id, CarUpdateDto carUpdateDto);
         Task<bool> DeleteCarAsync(int id);
         Task<bool> SetAvailabilityAsync(int id, bool available);
         Task<bool> UpdateOdometerAsync(int id, int newReading);
@@ -43,7 +43,7 @@ namespace BerAuto.Services
             return car == null ? null : _mapper.Map<CarDto>(car);
         }
 
-        public async Task<CarDto> CreateCarAsync(CarDto carDto)
+        public async Task<CarDto> CreateCarAsync(CarCreateDto carDto)
         {
             var car = _mapper.Map<Car>(carDto);
             _context.Cars.Add(car);
@@ -51,7 +51,7 @@ namespace BerAuto.Services
             return _mapper.Map<CarDto>(car);
         }
 
-        public async Task<CarDto> UpdateCarAsync(int id, CarDto carDto)
+        public async Task<CarDto> UpdateCarAsync(int id, CarUpdateDto carDto)
         {
             var car = await _context.Cars.FindAsync(id);
             if (car == null) return null;
