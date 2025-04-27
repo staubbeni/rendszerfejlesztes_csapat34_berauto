@@ -14,5 +14,4 @@ namespace BerAuto.DataContext.Entities
         public List<Rental> Rentals { get; set; }
         public List<Role> Roles { get; set; }
     }
-
 }

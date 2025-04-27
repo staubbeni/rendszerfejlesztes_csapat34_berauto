@@ -7,5 +7,4 @@ namespace BerAuto.DataContext.Entities
 
         public List<User> Users { get; set; }
     }
-
 }

@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using BerAuto.DataContext.Entities;
+﻿using BerAuto.DataContext.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BerAuto.DataContext.Context
 {
@@ -22,6 +22,12 @@ namespace BerAuto.DataContext.Context
                 .HasMany(u => u.Roles)
                 .WithMany(r => r.Users)
                 .UsingEntity(j => j.ToTable("UserRoles"));
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = "Admin" },
+                new Role { Id = 2, Name = "Customer" },
+                new Role { Id = 3, Name = "Employee" }
+            );
         }
     }
 }

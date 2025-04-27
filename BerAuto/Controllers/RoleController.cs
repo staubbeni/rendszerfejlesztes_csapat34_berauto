@@ -1,24 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
-using BerAuto.Services;
+using Microsoft.AspNetCore.Authorization;
+using BerAuto.DataContext.Context;
+using System.Linq;
 
 namespace BerAuto.Controllers
 {
     [ApiController]
     [Route("api/[controller]/[action]")]
+    [Authorize(Roles = "Admin")]
     public class RoleController : ControllerBase
     {
-        private readonly IRoleService _roleService;
+        private readonly AppDbContext _context;
 
-        public RoleController(IRoleService roleService)
+        public RoleController(AppDbContext context)
         {
-            _roleService = roleService;
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult List()
         {
-            var result = _roleService.GetAllRoles(); 
-            return Ok(result);
+            var roles = _context.Roles.ToList();
+            return Ok(roles);
         }
     }
 }

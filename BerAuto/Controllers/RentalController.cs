@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using BerAuto.Services;
 
 namespace BerAuto.Controllers
 {
     [ApiController]
     [Route("api/[controller]/[action]")]
+    [Authorize(Roles = "Employee,Admin")]
     public class RentalController : ControllerBase
     {
         private readonly IRentalService _rentalService;
 
-        public RentalController(IRentalService RentalService)
+        public RentalController(IRentalService rentalService)
         {
-            _rentalService = RentalService;
+            _rentalService = rentalService;
         }
 
         [HttpGet]

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using BerAuto.Services;
 
 namespace BerAuto.Controllers
@@ -9,12 +10,13 @@ namespace BerAuto.Controllers
     {
         private readonly ICarService _carService;
 
-        public CarController(ICarService CarService)
+        public CarController(ICarService carService)
         {
-            _carService = CarService;
+            _carService = carService;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult List()
         {
             var result = _carService.GetAllCars();
