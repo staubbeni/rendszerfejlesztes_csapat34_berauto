@@ -10,38 +10,43 @@ namespace BerAuto.DataContext.Dtos
     public class CarDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Model { get; set; }
-        public int Year { get; set; }
-        public decimal Price { get; set; }
-        public CarCategoryDto Category { get; set; }
 
+        [Required]
+        public string Make { get; set; }
+
+        [Required]
+        public string Model { get; set; }
+
+        public int Year { get; set; }
+        public int Odometer { get; set; }
+        public bool IsAvailable { get; set; }
     }
+
     public class CarCreateDto
     {
         [Required]
-
-        public string Name { get; set; }
+        public string Make { get; set; }
 
         public string Model { get; set; }
 
         [Required]
-
         [Range(0.01, double.MaxValue)]
         public decimal Price { get; set; }
 
         [Required]
-
         public int CarCategoryId { get; set; }
     }
 
     public class CarUpdateDto
     {
         [Required]
-        public string Name { get; set; }
+        public string Make { get; set; }
+
         public string Model { get; set; }
+
+        [Range(0.01, double.MaxValue)]
         public decimal? Price { get; set; }
+
         public int CarCategoryId { get; set; }
     }
-
 }
