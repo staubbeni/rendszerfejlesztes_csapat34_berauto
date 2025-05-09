@@ -179,6 +179,12 @@ public class UserService : IUserService
         }
 
         var address = _mapper.Map<Address>(addressDto);
+
+        if (user.Address == null)
+        {
+            user.Address = new List<Address>();
+        }
+
         user.Address.Add(address);
 
         await _context.SaveChangesAsync();
@@ -197,3 +203,4 @@ public class UserService : IUserService
         return await _context.Users.ToListAsync();
     }
 }
+

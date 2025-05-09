@@ -112,6 +112,7 @@ using (var scope = app.Services.CreateScope())
     var employeeRole = ctx.Roles.First(r => r.Name == "Employee").Id;
 
     // seed admin
+    //key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEwMDYiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJhZG1pbkBkb21haW4uY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc2lkIjoiYjAzZjkwMmYtNDU1ZC00MTAyLWI0YWQtMGQyZjVlZTVhYTFjIiwiYXV0aF90aW1lIjoiMDUvMDkvMjAyNSAxMTozNDowNSIsInJvbGVJZHMiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3NDkzNzUyNDUsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0OjcwMjkiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo3MDI5In0.Le-jLTWYx8kGVJz4S-UpUTxx9rGgay3eSyKRHNZ3lP8
     if (!ctx.Users.Any(u => u.Name == "admin"))
     {
         userService.RegisterAsync(new UserRegisterDto
@@ -125,6 +126,7 @@ using (var scope = app.Services.CreateScope())
     }
 
     // seed customer
+    //key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEwMDciLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiY3VzdG9tZXIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjdXN0b21lckBkb21haW4uY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc2lkIjoiYzhmYzgwYWItYzM2Ny00MmY2LWIyYTctZGZmZDhhYTBiODlhIiwiYXV0aF90aW1lIjoiMDUvMDkvMjAyNSAxMToyMzoxMSIsInJvbGVJZHMiOiIyIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQ3VzdG9tZXIiLCJleHAiOjE3NDkzNzQ1OTEsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0OjcwMjkiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo3MDI5In0.Zmh7ed9uMB_RYH9_2P3fFj8wmaJ5ea-TTJI0wOi6CbE
     if (!ctx.Users.Any(u => u.Name == "customer"))
     {
         userService.RegisterAsync(new UserRegisterDto
@@ -138,6 +140,7 @@ using (var scope = app.Services.CreateScope())
     }
 
     // seed employee
+    //key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEwMDgiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiZW1wbG95ZWUiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJlbXBsb3llZUBkb21haW4uY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc2lkIjoiMmVmNzVjZjQtOGMyZS00Zjc1LWE5NmQtZmFkMDE0ODBhMjBmIiwiYXV0aF90aW1lIjoiMDUvMDkvMjAyNSAxMTo0NTo1MyIsInJvbGVJZHMiOiIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiRW1wbG95ZWUiLCJleHAiOjE3NDkzNzU5NTMsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0OjcwMjkiLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo3MDI5In0.5_a94D0A7RZKr3DEFR_6XGYe6-rlu9RlDrHQVSPZS6E
     if (!ctx.Users.Any(u => u.Name == "employee"))
     {
         userService.RegisterAsync(new UserRegisterDto
