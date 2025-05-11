@@ -28,6 +28,10 @@ namespace BerAuto.DataContext.Context
                 new Role { Id = 2, Name = "Customer" },
                 new Role { Id = 3, Name = "Employee" }
             );
+
+            modelBuilder.Entity<Rental>()
+            .Property(r => r.TotalCost)
+            .HasPrecision(18, 4);
         }
     }
 }

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BerAuto", "BerAuto\BerAuto.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BerAuto.DataContext", "BerAuto.DataContext\BerAuto.DataContext.csproj", "{013D00BA-299A-4538-8A78-02DA34025461}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BerAuto.Services", "BerAuto.Service\BerAuto.Services.csproj", "{098E5E1C-7333-4765-A552-BD1E7CD2AA57}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BerAuto.Service", "BerAuto.Service\BerAuto.Service.csproj", "{098E5E1C-7333-4765-A552-BD1E7CD2AA57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
