@@ -28,9 +28,17 @@ export const AuthProvider = ({ children }) => {
                 email,
                 password,
             });
+
             const newToken = response.data.token;
             localStorage.setItem('token', newToken);
             setToken(newToken);
+
+            // Token dekódolása és felhasználói adatok beállítása
+            const decoded = jwtDecode(newToken);
+            setUser({ id: decoded.nameid, role: decoded.role, email: decoded.email });
+
+            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
             return true;
         } catch (error) {
             console.error('Login failed:', error);
@@ -62,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, setUser, setToken }}>
             {children}
         </AuthContext.Provider>
     );
