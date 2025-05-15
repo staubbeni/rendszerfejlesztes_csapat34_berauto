@@ -1,47 +1,27 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using AutoMapper;
-using BerAuto.DataContext.Context;
-using BerAuto.DataContext.Dtos;
-using BerAuto.DataContext.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Dtos;
 using BerAuto.DataContext.Entities;
 using Microsoft.EntityFrameworkCore;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BerAuto.Services
 {
     public interface IRentalService
     {
-        // Customer or Guest: create rental request
         Task<RentalDto> RequestRentalAsync(int? userId, RentalRequestDto req);
-
-        // Customer: view own rental history
         Task<IEnumerable<RentalDto>> GetUserRentalsAsync(int userId);
-
-        // Employee/Admin: view all rentals
         Task<IEnumerable<RentalDto>> GetAllRentalsAsync();
-
-        // Employee/Admin: approve or reject rental request
         Task<bool> ApproveRentalAsync(int rentalId);
         Task<bool> RejectRentalAsync(int rentalId);
-
-        // Employee/Admin: record pickup and return events
         Task<bool> RecordPickupAsync(int rentalId);
         Task<bool> RecordReturnAsync(int rentalId);
-
-        // Employee/Admin: generate invoice PDF
         Task<byte[]> GenerateInvoiceAsync(int rentalId);
     }
-}
-namespace BerAuto.Services
-{
+
     public class RentalService : IRentalService
     {
         private readonly AppDbContext _ctx;
@@ -55,20 +35,61 @@ namespace BerAuto.Services
 
         public async Task<RentalDto> RequestRentalAsync(int? userId, RentalRequestDto req)
         {
+            // Validációk
+            if (req == null)
+                throw new ArgumentNullException(nameof(req));
+
+            // Autó létezésének és elérhetőségének ellenőrzése
+            var car = await _ctx.Cars.FirstOrDefaultAsync(c => c.Id == req.CarId);
+            if (car == null)
+                throw new ArgumentException($"Car with ID {req.CarId} not found.");
+            if (!car.IsAvailable)
+                throw new InvalidOperationException("Car is not available for rental.");
+
+            // Időintervallum validálása
+            if (req.To <= req.From)
+                throw new ArgumentException("End date must be after start date.");
+
+            // Autó foglaltságának ellenőrzése
+            var isCarRented = await _ctx.Rentals
+                .AnyAsync(r => r.CarId == req.CarId &&
+                               r.Status != RentalStatus.Rejected &&
+                               r.Status != RentalStatus.Returned &&
+                               (req.From <= r.To && req.To >= r.From));
+            if (isCarRented)
+                throw new InvalidOperationException("Car is already rented for the specified period.");
+
+            // GuestAddress és GuestEmail ellenőrzése
+            if (string.IsNullOrWhiteSpace(req.GuestAddress))
+                throw new ArgumentException("Guest address is required.");
+            if (string.IsNullOrWhiteSpace(req.GuestEmail))
+                throw new ArgumentException("Guest email is required.");
+
+            // Rental entitás létrehozása
             var rental = new Rental
             {
                 UserId = userId,
-                GuestName = userId == null ? req.GuestName : null,
-                GuestEmail = userId == null ? req.GuestEmail : null,
-                GuestPhone = userId == null ? req.GuestPhone : null,
-                GuestAddress = userId == null ? req.GuestAddress : null,
+                GuestName = userId == null ? req.GuestName : req.GuestName, // Mindig kitöltve
+                GuestEmail = req.GuestEmail, // Mindig kitöltve
+                GuestPhone = userId == null ? req.GuestPhone : req.GuestPhone, // Mindig kitöltve
+                GuestAddress = req.GuestAddress, // Mindig kitöltve
                 CarId = req.CarId,
                 RequestDate = DateTime.UtcNow,
                 Status = RentalStatus.Pending,
-                TotalCost = 0m // compute later or in another step
+                From = req.From,
+                To = req.To
             };
-            _ctx.Rentals.Add(rental);
+
+            // Költség kiszámítása
+            var rentalDays = (req.To - req.From).Days;
+            if (rentalDays <= 0)
+                rentalDays = 1; // Minimum 1 nap
+            rental.TotalCost = rentalDays * car.DailyRate;
+
+            // Mentés az adatbázisba
+            await _ctx.Rentals.AddAsync(rental);
             await _ctx.SaveChangesAsync();
+
             return _mapper.Map<RentalDto>(rental);
         }
 

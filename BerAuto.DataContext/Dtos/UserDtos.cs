@@ -18,24 +18,15 @@ namespace BerAuto.DataContext.Dtos
         public List<AddressDto> Address { get; set; }
 
     }
+
     public class UserRegisterDto
     {
-        [Required]
-        [StringLength(50)]
         public string Name { get; set; }
-
-        [Required]
-        [EmailAddress]
         public string Email { get; set; }
-
-        [Required]
-        [MinLength(6)]
         public string Password { get; set; }
-
-        [Phone]
         public string PhoneNumber { get; set; }
-
-        public IList<int> RoleIds { get; set; }
+        public List<int> RoleIds { get; set; } = new List<int>();
+        public AddressDto Address { get; set; } // Cím hozzáadva a regisztrációhoz
     }
 
 

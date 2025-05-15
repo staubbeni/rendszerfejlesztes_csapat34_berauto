@@ -26,22 +26,21 @@ namespace BerAuto.DataContext.Dtos
 
     public class RentalDto
     {
-        public int Id { get; set; }
-        public int? UserId { get; set; }
-        public string GuestName { get; set; }
-        public string GuestEmail { get; set; }
-        public string GuestPhone { get; set; }
-        public string GuestAddress { get; set; }
-
+        [Required]
         public int CarId { get; set; }
-        public string CarMakeModel { get; set; }
-
-        public DateTime RequestDate { get; set; }
-        public DateTime? ApprovalDate { get; set; }
-        public DateTime? PickupDate { get; set; }
-        public DateTime? ReturnDate { get; set; }
-
-        public RentalStatus Status { get; set; }
-        public decimal TotalCost { get; set; }
+        [Required]
+        public DateTime From { get; set; }
+        [Required]
+        public DateTime To { get; set; }
+        [Required]
+        public string GuestName { get; set; }
+        [Required]
+        [EmailAddress]
+        public string GuestEmail { get; set; }
+        [Required]
+        [Phone]
+        public string GuestPhone { get; set; }
+        [Required(ErrorMessage = "Guest address is required")]
+        public string GuestAddress { get; set; }
     }
 }

@@ -5,10 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 
 public interface IUserService
@@ -17,8 +21,9 @@ public interface IUserService
     Task<string> LoginAsync(UserLoginDto userDto);
     Task<UserDto> UpdateProfileAsync(int userId, UserUpdateDto userDto);
     Task<UserDto> UpdateAddressAsync(int userId, AddressDto addressDto);
-    Task<IList<RoleDto>> GetRolesAsync();
-    Task<List<User>> GetAllUsersAsync();
+    Task<List<RoleDto>> GetRolesAsync(); // List<RoleDto> helyett, konzisztencia
+    Task<List<UserDto>> GetAllUsersAsync();
+    Task<UserDto> GetUserByIdAsync(int userId);
 }
 
 public class UserService : IUserService
@@ -34,21 +39,32 @@ public class UserService : IUserService
         IConfiguration configuration,
         ILogger<UserService> logger)
     {
-        _context = context;
-        _mapper = mapper;
-        _configuration = configuration;
-        _logger = logger;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<UserDto> RegisterAsync(UserRegisterDto userDto)
     {
+        if (userDto == null) throw new ArgumentNullException(nameof(userDto));
+
         try
         {
             var user = _mapper.Map<User>(userDto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             user.Roles = new List<Role>();
+            user.Address = new List<Address>(); // Inicializáljuk a címek listáját
 
-            if (userDto.RoleIds != null)
+            // Cím hozzáadása, ha meg van adva
+            if (userDto.Address != null)
+            {
+                var address = _mapper.Map<Address>(userDto.Address);
+                address.UserId = user.Id; // UserId beállítása
+                user.Address.Add(address);
+            }
+
+            if (userDto.RoleIds != null && userDto.RoleIds.Any())
             {
                 foreach (var roleId in userDto.RoleIds)
                 {
@@ -56,6 +72,10 @@ public class UserService : IUserService
                     if (existingRole != null)
                     {
                         user.Roles.Add(existingRole);
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Role with ID {roleId} not found.");
                     }
                 }
             }
@@ -72,30 +92,44 @@ public class UserService : IUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error during registration: {ex.Message}");
-            throw new Exception("An error occurred during registration.");
+            _logger.LogError(ex, "Error during registration for email {Email}", userDto.Email);
+            throw new Exception("An error occurred during registration.", ex);
         }
     }
 
     private async Task<Role> GetDefaultCustomerRoleAsync()
     {
-        var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
-        if (customerRole == null)
+        try
         {
-            customerRole = new Role { Name = "Customer" };
-            await _context.Roles.AddAsync(customerRole);
-            await _context.SaveChangesAsync();
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Customer");
+            if (customerRole == null)
+            {
+                customerRole = new Role { Name = "Customer" };
+                await _context.Roles.AddAsync(customerRole);
+                await _context.SaveChangesAsync();
+            }
+            return customerRole;
         }
-        return customerRole;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating default Customer role.");
+            throw new Exception("Failed to create default Customer role.", ex);
+        }
     }
 
     public async Task<string> LoginAsync(UserLoginDto userDto)
     {
+        if (userDto == null) throw new ArgumentNullException(nameof(userDto));
+
         try
         {
-            var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(x => x.Email == userDto.Email);
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(x => x.Email == userDto.Email);
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(userDto.Password, user.PasswordHash))
             {
+                _logger.LogWarning("Invalid login attempt for email {Email}", userDto.Email);
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
@@ -103,21 +137,43 @@ public class UserService : IUserService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error during login: {ex.Message}");
-            throw new UnauthorizedAccessException("Invalid credentials.");
+            _logger.LogError(ex, "Error during login for email {Email}", userDto.Email);
+            throw new UnauthorizedAccessException("Invalid credentials.", ex);
         }
     }
 
     private async Task<string> GenerateToken(User user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.Now.AddDays(Convert.ToDouble(_configuration["Jwt:ExpireDays"]));
+        if (user == null) throw new ArgumentNullException(nameof(user));
 
-        var id = await GetClaimsIdentity(user);
-        var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], id.Claims, expires: expires, signingCredentials: creds);
+        try
+        {
+            var keyString = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(keyString))
+            {
+                _logger.LogError("JWT key is not configured.");
+                throw new InvalidOperationException("JWT key is not configured.");
+            }
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expires = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["Jwt:ExpireDays"] ?? "7"));
+
+            var id = await GetClaimsIdentity(user);
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: id.Claims,
+                expires: expires,
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating token for user ID {UserId}", user.Id);
+            throw new Exception("Failed to generate token.", ex);
+        }
     }
 
     private async Task<ClaimsIdentity> GetClaimsIdentity(User user)
@@ -128,12 +184,12 @@ public class UserService : IUserService
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Sid, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.AuthTime, DateTime.Now.ToString(CultureInfo.InvariantCulture))
+            new Claim(JwtRegisteredClaimNames.AuthTime, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture))
         };
 
         if (user.Roles != null && user.Roles.Any())
         {
-            claims.AddRange(user.Roles.Select(role => new Claim("roleIds", Convert.ToString(role.Id))));
+            claims.AddRange(user.Roles.Select(role => new Claim("roleIds", role.Id.ToString())));
             claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.Name)));
         }
 
@@ -142,58 +198,135 @@ public class UserService : IUserService
 
     public async Task<UserDto> UpdateProfileAsync(int userId, UserUpdateDto userDto)
     {
-        var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == userId);
+        if (userDto == null) throw new ArgumentNullException(nameof(userDto));
+
+        var user = await _context.Users
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
         if (user == null)
         {
+            _logger.LogWarning("User not found with ID {UserId}", userId);
             throw new KeyNotFoundException("User not found.");
         }
 
-        _mapper.Map(userDto, user);
-
-        if (userDto.RoleIds != null && userDto.RoleIds.Any())
+        try
         {
-            user.Roles.Clear();
+            _mapper.Map(userDto, user);
 
-            foreach (var roleId in userDto.RoleIds)
+            if (userDto.RoleIds != null && userDto.RoleIds.Any())
             {
-                var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
-                if (existingRole != null)
+                user.Roles.Clear();
+                foreach (var roleId in userDto.RoleIds)
                 {
-                    user.Roles.Add(existingRole);
+                    var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
+                    if (existingRole != null)
+                    {
+                        user.Roles.Add(existingRole);
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Role with ID {roleId} not found for user ID {userId}.");
+                    }
                 }
             }
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<UserDto>(user);
         }
-
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync();
-
-        return _mapper.Map<UserDto>(user);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating profile for user ID {UserId}", userId);
+            throw new Exception("Failed to update user profile.", ex);
+        }
     }
 
     public async Task<UserDto> UpdateAddressAsync(int userId, AddressDto addressDto)
     {
-        var user = await _context.Users.Include(u => u.Address).FirstOrDefaultAsync(u => u.Id == userId);
+        if (addressDto == null) throw new ArgumentNullException(nameof(addressDto));
+
+        var user = await _context.Users
+            .Include(u => u.Address)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
         if (user == null)
         {
+            _logger.LogWarning("User not found with ID {UserId}", userId);
             throw new KeyNotFoundException("User not found.");
         }
 
-        var address = _mapper.Map<Address>(addressDto);
-        user.Address.Add(address);
+        try
+        {
+            var address = _mapper.Map<Address>(addressDto);
+            address.UserId = userId; // UserId beállítása
+            user.Address.Clear(); // Meglévő címek törlése (opcionális, üzleti logika függvénye)
+            user.Address.Add(address);
 
-        await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
-        return _mapper.Map<UserDto>(user);
+            return _mapper.Map<UserDto>(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating address for user ID {UserId}", userId);
+            throw new Exception("Failed to update user address.", ex);
+        }
     }
 
-    public async Task<IList<RoleDto>> GetRolesAsync()
+    public async Task<List<RoleDto>> GetRolesAsync()
     {
-        var roles = await _context.Roles.ToListAsync();
-        return _mapper.Map<IList<RoleDto>>(roles);
+        try
+        {
+            var roles = await _context.Roles.ToListAsync();
+            return _mapper.Map<List<RoleDto>>(roles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving roles.");
+            throw new Exception("Failed to retrieve roles.", ex);
+        }
     }
 
-    public async Task<List<User>> GetAllUsersAsync()
+    public async Task<List<UserDto>> GetAllUsersAsync()
     {
-        return await _context.Users.ToListAsync();
+        try
+        {
+            var users = await _context.Users
+                .Include(u => u.Roles)
+                .Include(u => u.Address)
+                .ToListAsync();
+            return _mapper.Map<List<UserDto>>(users);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all users.");
+            throw new Exception("Failed to retrieve users.", ex);
+        }
+    }
+
+    public async Task<UserDto> GetUserByIdAsync(int userId)
+    {
+        try
+        {
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .Include(u => u.Address)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                _logger.LogWarning("User not found with ID {UserId}", userId);
+                throw new KeyNotFoundException("User not found.");
+            }
+
+            return _mapper.Map<UserDto>(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user with ID {UserId}", userId);
+            throw new Exception("Failed to retrieve user.", ex);
+        }
     }
 }

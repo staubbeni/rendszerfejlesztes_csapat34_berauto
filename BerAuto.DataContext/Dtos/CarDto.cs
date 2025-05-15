@@ -20,6 +20,8 @@ namespace BerAuto.DataContext.Dtos
         public int Year { get; set; }
         public int Odometer { get; set; }
         public bool IsAvailable { get; set; }
+        public decimal Price { get; set; }
+        public int CarCategoryId { get; set; }
     }
 
     public class CarCreateDto
