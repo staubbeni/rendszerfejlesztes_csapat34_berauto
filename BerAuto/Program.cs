@@ -1,5 +1,6 @@
 using BerAuto.DataContext.Context;
 using BerAuto.DataContext.Dtos;
+using BerAuto.DataContext.Entities;
 using BerAuto.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +8,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,54 +99,87 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// **Seed default users**: admin, customer, employee
+// Seed data
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-    // ensure roles exist
+    ctx.Database.Migrate();
+
+    // Seed Roles
+    if (!ctx.Roles.Any())
+    {
+        ctx.Roles.AddRange(
+            new Role { Id = 1, Name = "Admin" },
+            new Role { Id = 2, Name = "Customer" },
+            new Role { Id = 3, Name = "Employee" }
+        );
+        ctx.SaveChanges();
+    }
+
+    // Get Role IDs
     var adminRole = ctx.Roles.First(r => r.Name == "Admin").Id;
     var customerRole = ctx.Roles.First(r => r.Name == "Customer").Id;
     var employeeRole = ctx.Roles.First(r => r.Name == "Employee").Id;
 
-    // seed admin
-    if (!ctx.Users.Any(u => u.Name == "admin"))
+    // Seed Users
+    if (!ctx.Users.Any())
     {
-        userService.RegisterAsync(new UserRegisterDto
+        var users = new[]
         {
-            Name = "admin",
-            Email = "admin@domain.com",
-            Password = "adminadmin",
-            PhoneNumber = "",
-            RoleIds = new List<int> { adminRole }
-        }).GetAwaiter().GetResult();
+            new UserRegisterDto { Name = "admin", Email = "admin@berauto.com", Password = "adminadmin", PhoneNumber = "1234567890", RoleIds = new List<int> { adminRole } },
+            new UserRegisterDto { Name = "customer1", Email = "cust1@berauto.com", Password = "customer1", PhoneNumber = "1111111111", RoleIds = new List<int> { customerRole } },
+            new UserRegisterDto { Name = "employee1", Email = "emp1@berauto.com", Password = "employee1", PhoneNumber = "2222222222", RoleIds = new List<int> { employeeRole } },
+            new UserRegisterDto { Name = "employee2", Email = "emp2@berauto.com", Password = "employee2", PhoneNumber = "3333333333", RoleIds = new List<int> { employeeRole } },
+            new UserRegisterDto { Name = "customer2", Email = "cust2@berauto.com", Password = "customer2", PhoneNumber = "4444444444", RoleIds = new List<int> { customerRole } }
+        };
+
+        foreach (var user in users)
+        {
+            userService.RegisterAsync(user).GetAwaiter().GetResult();
+        }
     }
 
-    // seed customer
-    if (!ctx.Users.Any(u => u.Name == "customer"))
+    // Seed Car Categories
+    if (!ctx.CarCategories.Any())
     {
-        userService.RegisterAsync(new UserRegisterDto
-        {
-            Name = "customer",
-            Email = "customer@domain.com",
-            Password = "customercustomer",
-            PhoneNumber = "",
-            RoleIds = new List<int> { customerRole }
-        }).GetAwaiter().GetResult();
+        ctx.CarCategories.AddRange(
+            new CarCategory { Name = "Sedan", Description = "Négyajtós, kényelmes személyautó" },
+            new CarCategory { Name = "SUV", Description = "Terepjáró jellegû nagyobb méretû autó" },
+            new CarCategory { Name = "Hatchback", Description = "Kompakt méretû városi autó" },
+            new CarCategory { Name = "Coupe", Description = "Sportos, kétajtós jármû" },
+            new CarCategory { Name = "Van", Description = "Nagy térrel rendelkezõ jármû, családi vagy üzleti célokra" }
+        );
+        ctx.SaveChanges();
     }
 
-    // seed employee
-    if (!ctx.Users.Any(u => u.Name == "employee"))
+    // Seed Cars
+    if (!ctx.Cars.Any())
     {
-        userService.RegisterAsync(new UserRegisterDto
-        {
-            Name = "employee",
-            Email = "employee@domain.com",
-            Password = "employeeemployee",
-            PhoneNumber = "",
-            RoleIds = new List<int> { employeeRole }
-        }).GetAwaiter().GetResult();
+        ctx.Cars.AddRange(
+            new Car { Brand = "Toyota", Model = "Corolla", Odometer = 45000, IsAvailable = true, CategoryId = 1, DailyRate = 5000.00m },
+            new Car { Brand = "BMW", Model = "X5", Odometer = 30000, IsAvailable = false, CategoryId = 2, DailyRate = 4500.00m },
+            new Car { Brand = "Ford", Model = "Focus", Odometer = 60000, IsAvailable = true, CategoryId = 1, DailyRate = 6000.00m },
+            new Car { Brand = "Audi", Model = "A4", Odometer = 25000, IsAvailable = true, CategoryId = 2, DailyRate = 10000.00m },
+            new Car { Brand = "Honda", Model = "Civic", Odometer = 15000, IsAvailable = true, CategoryId = 1, DailyRate = 8000.00m }
+        );
+        ctx.SaveChanges();
+    }
+
+    // Seed Addresses
+    if (!ctx.Addresses.Any())
+    {
+        var firstUserId = ctx.Users.First().Id;
+
+        ctx.Addresses.AddRange(
+            new Address { Street = "Fõ utca 1", City = "Budapest", State = "Pest", ZipCode = "1000", UserId = firstUserId },
+            new Address { Street = "Kossuth tér 5", City = "Debrecen", State = "Hajdú-Bihar", ZipCode = "4024", UserId = firstUserId },
+            new Address { Street = "Petõfi Sándor utca 10", City = "Szeged", State = "Csongrád", ZipCode = "6720", UserId = firstUserId },
+            new Address { Street = "Rákóczi út 3", City = "Miskolc", State = "Borsod", ZipCode = "3525", UserId = firstUserId },
+            new Address { Street = "Ady Endre utca 7", City = "Pécs", State = "Baranya", ZipCode = "7621", UserId = firstUserId }
+        );
+        ctx.SaveChanges();
     }
 }
 

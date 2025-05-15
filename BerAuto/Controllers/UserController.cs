@@ -11,10 +11,12 @@ namespace BerAuto.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IAddressService _addressService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IAddressService addressService)
         {
             _userService = userService;
+            _addressService = addressService;
         }
 
         [HttpPost("register")]
@@ -45,7 +47,11 @@ namespace BerAuto.Controllers
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> UpdateAddress(int userId, AddressDto addressDto)
         {
-            var updatedUser = await _userService.UpdateAddressAsync(userId, addressDto);
+            // Frissítjük a címet az AddressService használatával
+            await _addressService.CreateAddressAsync(addressDto, userId);
+
+            // Visszaadjuk a frissített felhasználót
+            var updatedUser = await _userService.GetUserByIdAsync(userId);
             return Ok(updatedUser);
         }
 
