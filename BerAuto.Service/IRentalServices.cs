@@ -7,6 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
+using System.Xml.Linq;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace BerAuto.Services
 {
@@ -150,10 +156,31 @@ namespace BerAuto.Services
             return true;
         }
 
-        public Task<byte[]> GenerateInvoiceAsync(int rentalId)
+        public async Task<byte[]> GenerateInvoiceAsync(int rentalId)
         {
-            // PDF generation stub
-            throw new NotImplementedException();
+            var rental = await _ctx.Rentals
+                .Include(r => r.Car)
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Id == rentalId);
+            if (rental == null)
+                throw new ArgumentException("Rental not found.");
+
+            using (var document = new PdfDocument())
+            {
+                var page = document.AddPage();
+                var gfx = XGraphics.FromPdfPage(page);
+                var font = new XFont("Arial", 12);
+
+                gfx.DrawString($"Számla #{rental.Id}", font, XBrushes.Black, new XRect(50, 50, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Autó: {rental.Car.Brand} {rental.Car.Model}", font, XBrushes.Black, new XRect(50, 70, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Költség: {rental.TotalCost} Ft", font, XBrushes.Black, new XRect(50, 90, page.Width, page.Height), XStringFormats.TopLeft);
+
+                using (var stream = new MemoryStream())
+                {
+                    document.Save(stream);
+                    return stream.ToArray();
+                }
+            }
         }
     }
 }

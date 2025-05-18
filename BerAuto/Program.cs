@@ -159,7 +159,7 @@ using (var scope = app.Services.CreateScope())
     {
         ctx.Cars.AddRange(
             new Car { Brand = "Toyota", Model = "Corolla", Odometer = 45000, IsAvailable = true, CategoryId = 1, DailyRate = 5000.00m },
-            new Car { Brand = "BMW", Model = "X5", Odometer = 30000, IsAvailable = false, CategoryId = 2, DailyRate = 4500.00m },
+            new Car { Brand = "BMW", Model = "X5", Odometer = 30000, IsAvailable = true, CategoryId = 2, DailyRate = 4500.00m },
             new Car { Brand = "Ford", Model = "Focus", Odometer = 60000, IsAvailable = true, CategoryId = 1, DailyRate = 6000.00m },
             new Car { Brand = "Audi", Model = "A4", Odometer = 25000, IsAvailable = true, CategoryId = 2, DailyRate = 10000.00m },
             new Car { Brand = "Honda", Model = "Civic", Odometer = 15000, IsAvailable = true, CategoryId = 1, DailyRate = 8000.00m }
