@@ -90,5 +90,12 @@ namespace BerAuto.Controllers
                 return NotFound();
             return Ok();
         }
+
+        [HttpGet("List")]
+        public async Task<ActionResult<IEnumerable<CarDto>>> GetCars()
+        {
+            var cars = await _carService.GetAllCarsAsync();
+            return Ok(cars);
+        }
     }
 }
