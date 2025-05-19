@@ -33,8 +33,20 @@ namespace BerAuto.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var address = await _addressService.CreateAddressAsync(addressDto, userId);
+            int? userId = null;
+            if (User?.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (idClaim != null && int.TryParse(idClaim.Value, out var parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+            if (!userId.HasValue)
+            {
+                return Unauthorized();
+            }
+            var address = await _addressService.CreateAddressAsync(addressDto, userId.Value);
             return Ok(address);
         }
 
@@ -42,8 +54,20 @@ namespace BerAuto.Controllers
         [Authorize(Roles = "Customer,Admin")]
         public async Task<IActionResult> GetCurrentUserAddress()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var address = await _addressService.GetAddressByUserIdAsync(userId);
+            int? userId = null;
+            if (User?.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (idClaim != null && int.TryParse(idClaim.Value, out var parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+            if (!userId.HasValue)
+            {
+                return Unauthorized();
+            }
+            var address = await _addressService.GetAddressByUserIdAsync(userId.Value);
 
             if (address == null)
                 return NotFound("No address found for current user");

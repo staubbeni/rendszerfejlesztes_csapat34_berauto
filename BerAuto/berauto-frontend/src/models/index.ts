@@ -25,7 +25,7 @@ export interface CarUpdateDto {
 }
 
 export interface AddressDto {
-  id: number;
+  id?: number;
   city: string;
   street: string;
   zipCode: string;

@@ -111,9 +111,9 @@ using (var scope = app.Services.CreateScope())
     if (!ctx.Roles.Any())
     {
         ctx.Roles.AddRange(
-            new Role { Id = 1, Name = "Admin" },
-            new Role { Id = 2, Name = "Customer" },
-            new Role { Id = 3, Name = "Employee" }
+            new Role { Name = "Admin" },
+            new Role { Name = "Customer" },
+            new Role { Name = "Employee" }
         );
         ctx.SaveChanges();
     }
@@ -145,11 +145,11 @@ using (var scope = app.Services.CreateScope())
     if (!ctx.CarCategories.Any())
     {
         ctx.CarCategories.AddRange(
-            new CarCategory { Name = "Sedan", Description = "Négyajtós, kényelmes személyautó" },
-            new CarCategory { Name = "SUV", Description = "Terepjáró jellegû nagyobb méretû autó" },
-            new CarCategory { Name = "Hatchback", Description = "Kompakt méretû városi autó" },
-            new CarCategory { Name = "Coupe", Description = "Sportos, kétajtós jármû" },
-            new CarCategory { Name = "Van", Description = "Nagy térrel rendelkezõ jármû, családi vagy üzleti célokra" }
+            new CarCategory { Name = "Sedan", Description = "Nï¿½gyajtï¿½s, kï¿½nyelmes szemï¿½lyautï¿½" },
+            new CarCategory { Name = "SUV", Description = "Terepjï¿½rï¿½ jellegï¿½ nagyobb mï¿½retï¿½ autï¿½" },
+            new CarCategory { Name = "Hatchback", Description = "Kompakt mï¿½retï¿½ vï¿½rosi autï¿½" },
+            new CarCategory { Name = "Coupe", Description = "Sportos, kï¿½tajtï¿½s jï¿½rmï¿½" },
+            new CarCategory { Name = "Van", Description = "Nagy tï¿½rrel rendelkezï¿½ jï¿½rmï¿½, csalï¿½di vagy ï¿½zleti cï¿½lokra" }
         );
         ctx.SaveChanges();
     }
@@ -173,11 +173,11 @@ using (var scope = app.Services.CreateScope())
         var firstUserId = ctx.Users.First().Id;
 
         ctx.Addresses.AddRange(
-            new Address { Street = "Fõ utca 1", City = "Budapest", State = "Pest", ZipCode = "1000", UserId = firstUserId },
-            new Address { Street = "Kossuth tér 5", City = "Debrecen", State = "Hajdú-Bihar", ZipCode = "4024", UserId = firstUserId },
-            new Address { Street = "Petõfi Sándor utca 10", City = "Szeged", State = "Csongrád", ZipCode = "6720", UserId = firstUserId },
-            new Address { Street = "Rákóczi út 3", City = "Miskolc", State = "Borsod", ZipCode = "3525", UserId = firstUserId },
-            new Address { Street = "Ady Endre utca 7", City = "Pécs", State = "Baranya", ZipCode = "7621", UserId = firstUserId }
+            new Address { Street = "Fï¿½ utca 1", City = "Budapest", State = "Pest", ZipCode = "1000", UserId = firstUserId },
+            new Address { Street = "Kossuth tï¿½r 5", City = "Debrecen", State = "Hajdï¿½-Bihar", ZipCode = "4024", UserId = firstUserId },
+            new Address { Street = "Petï¿½fi Sï¿½ndor utca 10", City = "Szeged", State = "Csongrï¿½d", ZipCode = "6720", UserId = firstUserId },
+            new Address { Street = "Rï¿½kï¿½czi ï¿½t 3", City = "Miskolc", State = "Borsod", ZipCode = "3525", UserId = firstUserId },
+            new Address { Street = "Ady Endre utca 7", City = "Pï¿½cs", State = "Baranya", ZipCode = "7621", UserId = firstUserId }
         );
         ctx.SaveChanges();
     }

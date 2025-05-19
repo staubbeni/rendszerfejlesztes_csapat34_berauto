@@ -7,6 +7,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jwt-decode": "^3.1.0",
+    "@types/react": "^18.3.21",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.7.7",
     "jwt-decode": "^4.0.0",

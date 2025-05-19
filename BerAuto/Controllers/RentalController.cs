@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using BerAuto.Services;
 using BerAuto.DataContext.Dtos;
-using BerAuto.DataContext.Context; // Hozz·adva
-using Microsoft.EntityFrameworkCore; // Hozz·adva
+using BerAuto.DataContext.Context; // HozzÔøΩadva
+using Microsoft.EntityFrameworkCore; // HozzÔøΩadva
 
 namespace BerAuto.Controllers
 {
@@ -15,7 +15,7 @@ namespace BerAuto.Controllers
     {
         private readonly IRentalService _rentalService;
         private readonly IAddressService _addressService;
-        private readonly AppDbContext _context; // Hozz·adva
+        private readonly AppDbContext _context; // HozzÔøΩadva
 
         public RentalController(IRentalService rentalService, IAddressService addressService, AppDbContext context)
         {
@@ -26,85 +26,115 @@ namespace BerAuto.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Request([FromBody] RentalRequestDto dto)
+        public async Task<IActionResult> RequestRental([FromBody] RentalRequestDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
 
-            int? userId = User.Identity.IsAuthenticated
-                ? int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value)
-                : null;
-
-            string guestAddress = null;
-            string guestEmail = null;
-            string guestName = null;
-            string guestPhone = null;
-
-            if (userId.HasValue) // Bejelentkezett felhaszn·lÛ
-            {
-                // Felhaszn·lÛ adatainak lekÈrÈse
-                var user = await _context.Users
-                    .Include(u => u.Address)
-                    .FirstOrDefaultAsync(u => u.Id == userId.Value);
-                if (user == null)
+                if (!ModelState.IsValid)
                 {
-                    return BadRequest("User not found.");
+                    return BadRequest(ModelState);
                 }
 
-                // CÌm ellenırzÈse
-                var userAddress = await _addressService.GetAddressByUserIdAsync(userId.Value);
-                if (userAddress == null)
+                int? userId = null;
+                if (User?.Identity != null && User.Identity.IsAuthenticated)
                 {
-                    return BadRequest("User address is required. Please update your profile with an address first.");
+                    var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                    if (idClaim != null && int.TryParse(idClaim.Value, out var parsedId))
+                    {
+                        userId = parsedId;
+                    }
                 }
 
-                // Felhaszn·lÛ adatainak kitˆltÈse
-                guestAddress = $"{userAddress.City}, {userAddress.Street}, {userAddress.ZipCode}, {userAddress.State}";
-                guestEmail = user.Email; // Felhaszn·lÛ email cÌme
-                guestName = user.Name; // Opcion·lis: felhaszn·lÛ neve
-                guestPhone = user.PhoneNumber; // Opcion·lis: felhaszn·lÛ telefonsz·ma
-            }
-            else // VendÈg
-            {
-                // Valid·ljuk a vendÈg adatait
-                if (string.IsNullOrWhiteSpace(dto.GuestName) ||
-                    string.IsNullOrWhiteSpace(dto.GuestEmail) ||
-                    string.IsNullOrWhiteSpace(dto.GuestPhone) ||
-                    string.IsNullOrWhiteSpace(dto.GuestAddress))
+                string? guestAddress = null;
+                string? guestEmail = null;
+                string? guestName = null;
+                string? guestPhone = null;
+
+                if (userId.HasValue) // Bejelentkezett felhaszn√°l√≥
                 {
-                    return BadRequest("All guest information (name, email, phone, address) is required.");
+                    // Felhaszn√°l√≥ adatainak lek√©r√©se
+                    var user = await _context.Users
+                        .Include(u => u.Address)
+                        .FirstOrDefaultAsync(u => u.Id == userId.Value);
+                    if (user == null)
+                    {
+                        return BadRequest("User not found.");
+                    }
+
+                    // C√≠m ellen≈ërz√©se
+                    var userAddress = await _addressService.GetAddressByUserIdAsync(userId.Value);
+                    if (userAddress == null)
+                    {
+                        return BadRequest("User address is required. Please update your profile with an address first.");
+                    }
+
+                    // Felhaszn√°l√≥ adatainak kit√∂lt√©se
+                    guestAddress = $"{userAddress.City}, {userAddress.Street}, {userAddress.ZipCode}, {userAddress.State}";
+                    guestEmail = user.Email; // Felhaszn√°l√≥ email c√≠me
+                    guestName = user.Name; // Opcion√°lis: felhaszn√°l√≥ neve
+                    guestPhone = user.PhoneNumber; // Opcion√°lis: felhaszn√°l√≥ telefonsz√°ma
                 }
-                guestAddress = dto.GuestAddress;
-                guestEmail = dto.GuestEmail;
-                guestName = dto.GuestName;
-                guestPhone = dto.GuestPhone;
-            }
+                else // Vend√©g
+                {
+                    // Valid√°ljuk a vend√©g adatait
+                    if (string.IsNullOrWhiteSpace(dto.GuestName) ||
+                        string.IsNullOrWhiteSpace(dto.GuestEmail) ||
+                        string.IsNullOrWhiteSpace(dto.GuestPhone) ||
+                        string.IsNullOrWhiteSpace(dto.GuestAddress))
+                    {
+                        return BadRequest("All guest information (name, email, phone, address) is required.");
+                    }
+                    guestAddress = dto.GuestAddress;
+                    guestEmail = dto.GuestEmail;
+                    guestName = dto.GuestName;
+                    guestPhone = dto.GuestPhone;
+                }
 
-            // Ellenırizz¸k, hogy a GuestEmail nem ¸res
-            if (string.IsNullOrWhiteSpace(guestEmail))
+                // Ellen≈ërizz√ºk, hogy a GuestEmail nem √ºres
+                if (string.IsNullOrWhiteSpace(guestEmail))
+                {
+                    return BadRequest("Guest email cannot be empty.");
+                }
+
+                // M√≥dos√≠tjuk a DTO-t
+                dto.GuestAddress = guestAddress;
+                dto.GuestEmail = guestEmail;
+                dto.GuestName = guestName;
+                dto.GuestPhone = guestPhone;
+
+                var rental = await _rentalService.RequestRentalAsync(userId, dto);
+                return Ok(rental);
+            }
+            catch (InvalidOperationException ex)
             {
-                return BadRequest("Guest email cannot be empty.");
+                return Conflict(ex.Message); // HTTP 409
             }
-
-            // MÛdosÌtjuk a DTO-t
-            dto.GuestAddress = guestAddress;
-            dto.GuestEmail = guestEmail;
-            dto.GuestName = guestName;
-            dto.GuestPhone = guestPhone;
-
-            var rental = await _rentalService.RequestRentalAsync(userId, dto);
-            return Ok(rental);
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Unexpected error: " + ex.Message);
+            }
         }
 
-        // Tov·bbi metÛdusok v·ltozatlanok
+        // TovÔøΩbbi metÔøΩdusok vÔøΩltozatlanok
         [HttpGet]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> MyRentals()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var list = await _rentalService.GetUserRentalsAsync(userId);
+            int? userId = null;
+            if (User?.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (idClaim != null && int.TryParse(idClaim.Value, out var parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+            if (!userId.HasValue)
+            {
+                return Unauthorized();
+            }
+            var list = await _rentalService.GetUserRentalsAsync(userId.Value);
             return Ok(list);
         }
 

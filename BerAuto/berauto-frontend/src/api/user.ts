@@ -2,7 +2,7 @@
 import axios from "axios";
 import { UserUpdateDto, AddressDto, UserRegisterDto, UserLoginDto } from "../models";
 
-const API_URL = "http://localhost:7029/api/User";
+const API_URL = "https://localhost:7029/api/User";
 
 export const register = async (dto: UserRegisterDto): Promise<void> => {
   await axios.post(`${API_URL}/register`, dto);

@@ -1,12 +1,29 @@
 // src/pages/RentalRequestPage.tsx
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { requestRental } from "../api/rentals";
 import { RentalRequestDto } from "../models";
 import { useNavigate } from "react-router-dom";
+import { getAllCars } from "../api/cars";
+import { CarDto } from "../models";
 
 const RentalRequestPage: React.FC = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
+  const [cars, setCars] = useState<CarDto[]>([]);
+  const [loadingCars, setLoadingCars] = useState<boolean>(true);
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const allCars = await getAllCars();
+        setCars(allCars.filter(car => car.isAvailable));
+      } catch (e) {
+        setCars([]);
+      } finally {
+        setLoadingCars(false);
+      }
+    };
+    fetchCars();
+  }, []);
   const [formData, setFormData] = useState<RentalRequestDto>({
     carId: 0,
     from: "",
@@ -21,111 +38,178 @@ const RentalRequestPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Frontend validáció: minden kötelező mező ki van-e töltve?
+    if (!formData.carId || !formData.from || !formData.to) {
+      setError("Kérlek, válassz autót és add meg a kölcsönzés időszakát!");
+      return;
+    }
+    // Dátumok validálása (ISO string, backend DateTime kompatibilis)
+    const fromDate = new Date(formData.from);
+    const toDate = new Date(formData.to);
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      setError("Hibás dátum formátum!");
+      return;
+    }
     try {
-      await requestRental(formData);
+      // Bejelentkezett felhasználónál NE küldjünk guest mezőket
+      let payload: any = { ...formData };
+      if (isAuthenticated) {
+        delete payload.guestName;
+        delete payload.guestEmail;
+        delete payload.guestPhone;
+        delete payload.guestAddress;
+      }
+      // Debug: logoljuk a küldött adatokat
+      // eslint-disable-next-line no-console
+      console.log("Küldött kölcsönzési igény:", payload);
+      await requestRental(payload);
       navigate(isAuthenticated ? "/rentals" : "/cars");
     } catch (err: any) {
-      setError(err.response?.data || "Hiba a kölcsönzési igény leadásakor");
+      let backendMsg = err.response?.data || err.message || "";
+      if (typeof backendMsg === "object" && backendMsg !== null) {
+        backendMsg = backendMsg.title || backendMsg.message || JSON.stringify(backendMsg);
+      }
+      if (
+        typeof backendMsg === "string" &&
+        backendMsg.includes("Car is already rented for the specified period.")
+      ) {
+        setError("Ez az autó már foglalt a megadott időszakra.");
+      } else {
+        setError(backendMsg || "Hiba a kölcsönzési igény leadásakor");
+      }
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Kölcsönzési igény</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Autó ID:</label>
-          <input
-            type="number"
-            value={formData.carId}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setFormData({ ...formData, carId: parseInt(e.target.value) })
-            }
-            style={{ margin: "10px", padding: "5px" }}
-            required
-          />
-        </div>
-        <div>
-          <label>Kezdés dátuma:</label>
-          <input
-            type="date"
-            value={formData.from}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setFormData({ ...formData, from: e.target.value })
-            }
-            style={{ margin: "10px", padding: "5px" }}
-            required
-          />
-        </div>
-        <div>
-          <label>Vége dátuma:</label>
-          <input
-            type="date"
-            value={formData.to}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setFormData({ ...formData, to: e.target.value })
-            }
-            style={{ margin: "10px", padding: "5px" }}
-            required
-          />
-        </div>
-        {!isAuthenticated && (
-          <>
-            <div>
-              <label>Név:</label>
-              <input
-                type="text"
-                value={formData.guestName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, guestName: e.target.value })
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f6fb" }}>
+      <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.10)", padding: 32, minWidth: 340, maxWidth: 400, width: "100%" }}>
+        <h2 style={{ textAlign: "center", marginBottom: 24 }}>Kölcsönzési igény</h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 500 }}>Autó kiválasztása:</label>
+            {loadingCars ? (
+              <span>Autók betöltése...</span>
+            ) : (
+              <select
+                value={formData.carId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setFormData({ ...formData, carId: parseInt(e.target.value) })
                 }
-                style={{ margin: "10px", padding: "5px" }}
+                style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
                 required
-              />
-            </div>
-            <div>
-              <label>Email:</label>
-              <input
-                type="email"
-                value={formData.guestEmail}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, guestEmail: e.target.value })
-                }
-                style={{ margin: "10px", padding: "5px" }}
-                required
-              />
-            </div>
-            <div>
-              <label>Telefon:</label>
-              <input
-                type="text"
-                value={formData.guestPhone}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, guestPhone: e.target.value })
-                }
-                style={{ margin: "10px", padding: "5px" }}
-                required
-              />
-            </div>
-            <div>
-              <label>Cím:</label>
-              <input
-                type="text"
-                value={formData.guestAddress}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, guestAddress: e.target.value })
-                }
-                style={{ margin: "10px", padding: "5px" }}
-                required
-              />
-            </div>
-          </>
-        )}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit" style={{ padding: "10px" }}>
-          Kölcsönzési igény leadása
-        </button>
-      </form>
+              >
+                <option value="">Válassz autót</option>
+                {cars.map(car => (
+                  <option key={car.id} value={car.id}>
+                    {car.make} {car.model} (#{car.id})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 500 }}>Kezdés dátuma:</label>
+            <input
+              type="date"
+              value={formData.from}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, from: e.target.value })
+              }
+              style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 500 }}>Vége dátuma:</label>
+            <input
+              type="date"
+              value={formData.to}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFormData({ ...formData, to: e.target.value })
+              }
+              style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+              required
+            />
+          </div>
+          {!isAuthenticated && (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Név:</label>
+                <input
+                  type="text"
+                  value={formData.guestName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestName: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Email:</label>
+                <input
+                  type="email"
+                  value={formData.guestEmail}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestEmail: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Telefon:</label>
+                <input
+                  type="text"
+                  value={formData.guestPhone}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestPhone: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Cím:</label>
+                <input
+                  type="text"
+                  value={formData.guestAddress}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestAddress: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+            </>
+          )}
+          {error && (
+            <p style={{ color: "red", textAlign: "center", marginTop: 12, marginBottom: 0 }}>
+              {typeof error === "string"
+                ? error
+                : "Hiba a kölcsönzési igény leadásakor"}
+            </p>
+          )}
+          <button
+            type="submit"
+            style={{
+              padding: "12px 0",
+              width: "100%",
+              background: "#1976d2",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              fontWeight: 600,
+              fontSize: 16,
+              marginTop: 18,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(25, 118, 210, 0.08)"
+            }}
+          >
+            Kölcsönzési igény leadása
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

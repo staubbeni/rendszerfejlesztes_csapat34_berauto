@@ -2,10 +2,10 @@
 import axios from "axios";
 import { RentalDto, RentalRequestDto } from "../models";
 
-const API_URL = "http://localhost:7029/api/Rental";
+const API_URL = "https://localhost:7029/api/Rental";
 
 export const requestRental = async (dto: RentalRequestDto): Promise<RentalDto> => {
-  const response = await axios.post(`${API_URL}/Request`, dto, {
+  const response = await axios.post(`${API_URL}/RequestRental`, dto, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
   return response.data;

@@ -2,7 +2,7 @@
 import axios from "axios";
 import { RoleDto } from "../models";
 
-const API_URL = "http://localhost:7029/api/Role";
+const API_URL = "https://localhost:7029/api/Role";
 
 export const getRoles = async (): Promise<RoleDto[]> => {
   const response = await axios.get(`${API_URL}/List`, {

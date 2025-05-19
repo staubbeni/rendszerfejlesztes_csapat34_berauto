@@ -31,7 +31,7 @@ const RentalsPage: React.FC = () => {
       <h2>Bérléseim</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <ul>
-        {rentals.map((rental) => (
+        {rentals.map((rental: RentalDto) => (
           <li key={rental.id}>
             Autó ID: {rental.carId}, Időtartam: {new Date(rental.from).toLocaleDateString()} -{" "}
             {new Date(rental.to).toLocaleDateString()}, Státusz: {rental.status}
