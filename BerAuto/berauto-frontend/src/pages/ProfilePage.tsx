@@ -7,7 +7,7 @@ import { UserUpdateDto, AddressDto } from "../models";
 const ProfilePage: React.FC = () => {
   const { user } = useContext(AuthContext);
   const [profileData, setProfileData] = useState<UserUpdateDto>({
-    username: "",
+    name: "",
     email: "",
     phoneNumber: "",
     roleIds: [],
@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ username: user.name, email: "", phoneNumber: "", roleIds: [] });
+      setProfileData({ name: user.name, email: "", phoneNumber: "", roleIds: [] });
       const fetchAddress = async () => {
         try {
           const address = await getCurrentUserAddress();
@@ -45,7 +45,7 @@ const ProfilePage: React.FC = () => {
         alert("Profil frissítve!");
       }
     } catch (err: any) {
-      setError(err.response?.data || "Hiba a profil frissítésekor");
+      setError("Hiba a profil frissítésekor");
     }
   };
 
@@ -57,7 +57,7 @@ const ProfilePage: React.FC = () => {
         alert("Cím frissítve!");
       }
     } catch (err: any) {
-      setError(err.response?.data || "Hiba a cím frissítésekor");
+      setError("Hiba a cím frissítésekor");
     }
   };
 
@@ -72,8 +72,8 @@ const ProfilePage: React.FC = () => {
             <label style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Felhasználónév:</label>
             <input
               type="text"
-              value={profileData.username}
-              onChange={e => setProfileData({ ...profileData, username: e.target.value })}
+              value={profileData.name}
+              onChange={e => setProfileData({ ...profileData, name: e.target.value })}
               style={{ marginBottom: 0, padding: "10px", borderRadius: 8, border: "1px solid #ccc", width: "100%", fontSize: 16 }}
               required
             />

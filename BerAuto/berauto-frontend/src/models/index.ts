@@ -88,7 +88,7 @@ export interface UserLoginDto {
 }
 
 export interface UserUpdateDto {
-  username: string;
+  name: string;
   email: string;
   phoneNumber: string;
   roleIds: number[];

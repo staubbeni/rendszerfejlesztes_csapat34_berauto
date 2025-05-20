@@ -70,21 +70,34 @@ namespace BerAuto.Services
                 throw new ArgumentException("Guest address is required.");
             if (string.IsNullOrWhiteSpace(req.GuestEmail))
                 throw new ArgumentException("Guest email is required.");
+            User user = null;
+            if (userId != null)
+            {
+                user = await _ctx.Users
+                    .Include(u => u.Address)
+                    .FirstOrDefaultAsync(u => u.Id == userId.Value);
+            }
+
 
             // Rental entitás létrehozása
             var rental = new Rental
             {
                 UserId = userId,
-                GuestName = userId == null ? req.GuestName : req.GuestName, // Mindig kitöltve
-                GuestEmail = req.GuestEmail, // Mindig kitöltve
-                GuestPhone = userId == null ? req.GuestPhone : req.GuestPhone, // Mindig kitöltve
-                GuestAddress = req.GuestAddress, // Mindig kitöltve
+                GuestName = userId == null ? req.GuestName : user?.Name,
+                GuestEmail = userId == null ? req.GuestEmail : user?.Email,
+                GuestPhone = userId == null ? req.GuestPhone : user?.PhoneNumber,
+                GuestAddress = userId == null
+                ? req.GuestAddress
+        :           user?.Address?.FirstOrDefault()?.Street + ", " +
+                    user?.Address?.FirstOrDefault()?.City + ", " +
+                    user?.Address?.FirstOrDefault()?.ZipCode,
                 CarId = req.CarId,
                 RequestDate = DateTime.UtcNow,
                 Status = RentalStatus.Pending,
                 From = req.From,
                 To = req.To
             };
+
 
             // Költség kiszámítása
             var rentalDays = (req.To - req.From).Days;

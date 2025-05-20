@@ -26,16 +26,39 @@ const RentalsPage: React.FC = () => {
     return <p style={{ padding: "20px" }}>Bejelentkezés szükséges!</p>;
   }
 
+  const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Bérléseim</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <ul>
         {rentals.map((rental) => (
-          <li key={rental.id}>
-            Autó ID: {rental.carId}, Időtartam: {new Date(rental.from).toLocaleDateString()} -{" "}
-            {new Date(rental.to).toLocaleDateString()}, Státusz: {rental.status}
-          </li>
+          <div
+      style={{
+        background: "#fff",
+        border: "1px solid #ddd",
+        borderRadius: "12px",
+        padding: "16px",
+        marginBottom: "16px",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)"
+      }}
+    >
+      <h4 style={{ margin: "0 0 8px", color: "#1976d2" }}>
+        Autó ID: {rental.carId}
+      </h4>
+      <p style={{ margin: "4px 0" }}>
+        <strong>Időtartam:</strong> {formatDate(rental.from)} – {formatDate(rental.to)}
+      </p>
+      <p style={{ margin: "4px 0" }}>
+        <strong>Státusz:</strong> {rental.status}
+      </p>
+    </div>
         ))}
       </ul>
     </div>

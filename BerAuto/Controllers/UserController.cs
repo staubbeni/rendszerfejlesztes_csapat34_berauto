@@ -64,7 +64,7 @@ namespace BerAuto.Controllers
             }
         }
 
-        [HttpPut("update-profile/{userId}")]
+        [HttpPut("/api/User/update-profile/{userId}")]
         [Authorize]
         public async Task<IActionResult> UpdateProfile(int userId, [FromBody] UserUpdateDto dto)
         {
@@ -88,7 +88,7 @@ namespace BerAuto.Controllers
             }
         }
 
-        [HttpPut("update-address/{userId}")]
+        [HttpPut("/api/User/update-address/{userId}")]
         [Authorize]
         public async Task<IActionResult> UpdateAddress(int userId, [FromBody] AddressDto dto)
         {
@@ -112,7 +112,7 @@ namespace BerAuto.Controllers
             }
         }
 
-        [HttpGet("Address/current")]
+        [HttpGet("/api/User/Address/current")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUserAddress()
         {
