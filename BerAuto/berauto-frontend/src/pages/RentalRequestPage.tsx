@@ -1,4 +1,3 @@
-// src/pages/RentalRequestPage.tsx
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { requestRental } from "../api/rentals";
@@ -6,11 +5,14 @@ import { RentalRequestDto } from "../models";
 import { useNavigate } from "react-router-dom";
 import { getAllCars } from "../api/cars";
 import { CarDto } from "../models";
+import { getCurrentUserAddress } from "../api/user";
 
 const RentalRequestPage: React.FC = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
   const [cars, setCars] = useState<CarDto[]>([]);
   const [loadingCars, setLoadingCars] = useState<boolean>(true);
+  const [userAddress, setUserAddress] = useState<string>("");
+
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -22,45 +24,76 @@ const RentalRequestPage: React.FC = () => {
         setLoadingCars(false);
       }
     };
+
+    const fetchUserAddress = async () => {
+      if (isAuthenticated) {
+        try {
+          const address = await getCurrentUserAddress();
+          setUserAddress(`${address.city}, ${address.street}, ${address.zipCode}, ${address.state}`);
+        } catch (e) {
+          console.error("Hiba a cím lekérdezésekor:", e);
+        }
+      }
+    };
+
     fetchCars();
-  }, []);
+    fetchUserAddress();
+  }, [isAuthenticated]);
+
   const [formData, setFormData] = useState<RentalRequestDto>({
     carId: 0,
     from: "",
     to: "",
-    guestName: "",
-    guestEmail: "",
-    guestPhone: "",
-    guestAddress: "",
+    guestName: isAuthenticated && user ? user.name : "",
+    guestEmail: isAuthenticated && user ? user.email : "",
+    guestPhone: isAuthenticated && user ? user.phoneNumber : "",
+    guestAddress: isAuthenticated ? userAddress : "",
   });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (isAuthenticated && userAddress) {
+      setFormData(prev => ({
+        ...prev,
+        guestName: user?.name || "",
+        guestEmail: user?.email || "",
+        guestPhone: user?.phoneNumber || "",
+        guestAddress: userAddress,
+      }));
+    }
+  }, [userAddress, user, isAuthenticated]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Frontend validáció: minden kötelező mező ki van-e töltve?
     if (!formData.carId || !formData.from || !formData.to) {
       setError("Kérlek, válassz autót és add meg a kölcsönzés időszakát!");
       return;
     }
-    // Dátumok validálása (ISO string, backend DateTime kompatibilis)
     const fromDate = new Date(formData.from);
     const toDate = new Date(formData.to);
     if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
       setError("Hibás dátum formátum!");
       return;
     }
+    if (toDate <= fromDate) {
+      setError("A befejezés dátuma nem lehet korábbi, mint a kezdés dátuma!");
+      return;
+    }
+    if (isAuthenticated && (!formData.guestEmail || !formData.guestAddress)) {
+      setError("Email és cím megadása kötelező!");
+      return;
+    }
     try {
-      // Bejelentkezett felhasználónál NE küldjünk guest mezőket
-      let payload: any = { ...formData };
-      if (isAuthenticated) {
-        delete payload.guestName;
-        delete payload.guestEmail;
-        delete payload.guestPhone;
-        delete payload.guestAddress;
-      }
-      // Debug: logoljuk a küldött adatokat
-      // eslint-disable-next-line no-console
+      const payload: RentalRequestDto = {
+        carId: formData.carId,
+        from: formData.from,
+        to: formData.to,
+        guestName: formData.guestName,
+        guestEmail: formData.guestEmail,
+        guestPhone: formData.guestPhone,
+        guestAddress: formData.guestAddress,
+      };
       console.log("Küldött kölcsönzési igény:", payload);
       await requestRental(payload);
       navigate(isAuthenticated ? "/rentals" : "/cars");
@@ -183,6 +216,58 @@ const RentalRequestPage: React.FC = () => {
               </div>
             </>
           )}
+          {isAuthenticated && (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Név:</label>
+                <input
+                  type="text"
+                  value={formData.guestName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestName: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Email:</label>
+                <input
+                  type="email"
+                  value={formData.guestEmail}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestEmail: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Telefon:</label>
+                <input
+                  type="text"
+                  value={formData.guestPhone}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestPhone: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 500 }}>Cím:</label>
+                <input
+                  type="text"
+                  value={formData.guestAddress}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, guestAddress: e.target.value })
+                  }
+                  style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
+                  required
+                />
+              </div>
+            </>
+          )}
           {error && (
             <p style={{ color: "red", textAlign: "center", marginTop: 12, marginBottom: 0 }}>
               {typeof error === "string"
@@ -214,5 +299,4 @@ const RentalRequestPage: React.FC = () => {
   );
 };
 
-export {}; // **Ez teszi modullá a fájlt**
 export default RentalRequestPage;

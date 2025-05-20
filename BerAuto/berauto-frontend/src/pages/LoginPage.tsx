@@ -1,20 +1,22 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { login } from "../api/auth";
-import { UserLoginDto } from "../models";
+import { login, UserLoginDto, LoginResponse } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const { login: authLogin } = useContext(AuthContext);
   const [credentials, setCredentials] = useState<UserLoginDto>({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = await login(credentials);
-      authLogin(token);
+      const response: LoginResponse = await login(credentials);
+      authLogin(response.token, response.user);
+      navigate("/cars");
     } catch (err: any) {
-      setError(err.response?.data || "Hibás email vagy jelszó");
+      setError(err.response?.data?.message || "Hibás email vagy jelszó");
     }
   };
 

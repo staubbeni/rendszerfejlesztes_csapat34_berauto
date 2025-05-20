@@ -18,10 +18,10 @@ using AutoMapper;
 public interface IUserService
 {
     Task<UserDto> RegisterAsync(UserRegisterDto userDto);
-    Task<string> LoginAsync(UserLoginDto userDto);
+    Task<(string Token, UserDto User)> LoginAsync(UserLoginDto loginDto); // userDto helyett loginDto
     Task<UserDto> UpdateProfileAsync(int userId, UserUpdateDto userDto);
     Task<UserDto> UpdateAddressAsync(int userId, AddressDto addressDto);
-    Task<List<RoleDto>> GetRolesAsync(); // List<RoleDto> helyett, konzisztencia
+    Task<List<RoleDto>> GetRolesAsync();
     Task<List<UserDto>> GetAllUsersAsync();
     Task<UserDto> GetUserByIdAsync(int userId);
 }
@@ -51,16 +51,22 @@ public class UserService : IUserService
 
         try
         {
+            // Ellenőrizzük, hogy az email már létezik-e
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
+            {
+                _logger.LogWarning("Email already exists: {Email}", userDto.Email);
+                throw new InvalidOperationException("Email already exists.");
+            }
+
             var user = _mapper.Map<User>(userDto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             user.Roles = new List<Role>();
-            user.Address = new List<Address>(); // Inicializáljuk a címek listáját
+            user.Address = new List<Address>();
 
-            // Cím hozzáadása, ha meg van adva
             if (userDto.Address != null)
             {
                 var address = _mapper.Map<Address>(userDto.Address);
-                address.UserId = user.Id; // UserId beállítása
+                // UserId-t nem állítjuk be, mert az EF Core kezeli a kapcsolatot mentés után
                 user.Address.Add(address);
             }
 
@@ -88,7 +94,18 @@ public class UserService : IUserService
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<UserDto>(user);
+            // Betöltjük a mentett felhasználót a címekkel együtt a válaszhoz
+            var savedUser = await _context.Users
+                .Include(u => u.Roles)
+                .Include(u => u.Address)
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            return _mapper.Map<UserDto>(savedUser);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database error during registration for email {Email}", userDto.Email);
+            throw new Exception("Database error during registration.", ex);
         }
         catch (Exception ex)
         {
@@ -117,27 +134,30 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<string> LoginAsync(UserLoginDto userDto)
+    public async Task<(string Token, UserDto User)> LoginAsync(UserLoginDto loginDto)
     {
-        if (userDto == null) throw new ArgumentNullException(nameof(userDto));
+        if (loginDto == null) throw new ArgumentNullException(nameof(loginDto));
 
         try
         {
             var user = await _context.Users
                 .Include(u => u.Roles)
-                .FirstOrDefaultAsync(x => x.Email == userDto.Email);
+                .Include(u => u.Address) // Hozzáadva a címek betöltéséhez
+                .FirstOrDefaultAsync(x => x.Email == loginDto.Email);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(userDto.Password, user.PasswordHash))
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
-                _logger.LogWarning("Invalid login attempt for email {Email}", userDto.Email);
+                _logger.LogWarning("Invalid login attempt for email {Email}", loginDto.Email);
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
-            return await GenerateToken(user);
+            var token = await GenerateToken(user);
+            var mappedUser = _mapper.Map<UserDto>(user);
+            return (token, mappedUser);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during login for email {Email}", userDto.Email);
+            _logger.LogError(ex, "Error during login for email {Email}", loginDto.Email);
             throw new UnauthorizedAccessException("Invalid credentials.", ex);
         }
     }
@@ -260,8 +280,8 @@ public class UserService : IUserService
         try
         {
             var address = _mapper.Map<Address>(addressDto);
-            address.UserId = userId; // UserId beállítása
-            user.Address.Clear(); // Meglévő címek törlése (opcionális, üzleti logika függvénye)
+            address.UserId = userId;
+            user.Address.Clear();
             user.Address.Add(address);
 
             await _context.SaveChangesAsync();

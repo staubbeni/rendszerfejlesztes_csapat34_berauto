@@ -1,16 +1,32 @@
-// src/api/user.ts
 import axios from "axios";
-import { UserUpdateDto, AddressDto, UserRegisterDto, UserLoginDto } from "../models";
+import { AddressDto, UserRegisterDto, UserUpdateDto } from "../models";
 
 const API_URL = "https://localhost:7029/api/User";
+
+// Exportáljuk az UserLoginDto interfészt
+export interface UserLoginDto {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    roles: string[];
+  };
+}
 
 export const register = async (dto: UserRegisterDto): Promise<void> => {
   await axios.post(`${API_URL}/register`, dto);
 };
 
-export const login = async (credentials: UserLoginDto): Promise<string> => {
+export const login = async (credentials: UserLoginDto): Promise<LoginResponse> => {
   const response = await axios.post(`${API_URL}/login`, credentials);
-  return response.data.token;
+  return response.data;
 };
 
 export const updateProfile = async (userId: number, dto: UserUpdateDto): Promise<void> => {

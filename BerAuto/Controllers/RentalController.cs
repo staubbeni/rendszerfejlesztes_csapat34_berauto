@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using BerAuto.Services;
 using BerAuto.DataContext.Dtos;
-using BerAuto.DataContext.Context; // Hozz�adva
-using Microsoft.EntityFrameworkCore; // Hozz�adva
+using BerAuto.DataContext.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace BerAuto.Controllers
 {
@@ -15,7 +15,7 @@ namespace BerAuto.Controllers
     {
         private readonly IRentalService _rentalService;
         private readonly IAddressService _addressService;
-        private readonly AppDbContext _context; // Hozz�adva
+        private readonly AppDbContext _context;
 
         public RentalController(IRentalService rentalService, IAddressService addressService, AppDbContext context)
         {
@@ -30,13 +30,17 @@ namespace BerAuto.Controllers
         {
             try
             {
-
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
 
                 int? userId = null;
+                string? guestAddress = null;
+                string? guestEmail = null;
+                string? guestName = null;
+                string? guestPhone = null;
+
                 if (User?.Identity != null && User.Identity.IsAuthenticated)
                 {
                     var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -46,14 +50,8 @@ namespace BerAuto.Controllers
                     }
                 }
 
-                string? guestAddress = null;
-                string? guestEmail = null;
-                string? guestName = null;
-                string? guestPhone = null;
-
                 if (userId.HasValue) // Bejelentkezett felhasználó
                 {
-                    // Felhasználó adatainak lekérése
                     var user = await _context.Users
                         .Include(u => u.Address)
                         .FirstOrDefaultAsync(u => u.Id == userId.Value);
@@ -62,22 +60,23 @@ namespace BerAuto.Controllers
                         return BadRequest("User not found.");
                     }
 
-                    // Cím ellenőrzése
+                    // Cím lekérdezése az adatbázisból
                     var userAddress = await _addressService.GetAddressByUserIdAsync(userId.Value);
-                    if (userAddress == null)
+                    if (userAddress == null && string.IsNullOrWhiteSpace(dto.GuestAddress))
                     {
-                        return BadRequest("User address is required. Please update your profile with an address first.");
+                        return BadRequest("User address is required. Please update your profile with an address or provide one in the request.");
                     }
 
-                    // Felhasználó adatainak kitöltése
-                    guestAddress = $"{userAddress.City}, {userAddress.Street}, {userAddress.ZipCode}, {userAddress.State}";
-                    guestEmail = user.Email; // Felhasználó email címe
-                    guestName = user.Name; // Opcionális: felhasználó neve
-                    guestPhone = user.PhoneNumber; // Opcionális: felhasználó telefonszáma
+                    // Ha a DTO-ban van megadva cím, azt használjuk; különben az adatbázisból
+                    guestAddress = !string.IsNullOrWhiteSpace(dto.GuestAddress)
+                        ? dto.GuestAddress
+                        : $"{userAddress.City}, {userAddress.Street}, {userAddress.ZipCode}, {userAddress.State}";
+                    guestEmail = !string.IsNullOrWhiteSpace(dto.GuestEmail) ? dto.GuestEmail : user.Email;
+                    guestName = !string.IsNullOrWhiteSpace(dto.GuestName) ? dto.GuestName : user.Name;
+                    guestPhone = !string.IsNullOrWhiteSpace(dto.GuestPhone) ? dto.GuestPhone : user.PhoneNumber;
                 }
                 else // Vendég
                 {
-                    // Validáljuk a vendég adatait
                     if (string.IsNullOrWhiteSpace(dto.GuestName) ||
                         string.IsNullOrWhiteSpace(dto.GuestEmail) ||
                         string.IsNullOrWhiteSpace(dto.GuestPhone) ||
@@ -91,10 +90,14 @@ namespace BerAuto.Controllers
                     guestPhone = dto.GuestPhone;
                 }
 
-                // Ellenőrizzük, hogy a GuestEmail nem üres
+                // Ellenőrizzük, hogy a GuestEmail és GuestAddress nem üres
                 if (string.IsNullOrWhiteSpace(guestEmail))
                 {
                     return BadRequest("Guest email cannot be empty.");
+                }
+                if (string.IsNullOrWhiteSpace(guestAddress))
+                {
+                    return BadRequest("Guest address cannot be empty.");
                 }
 
                 // Módosítjuk a DTO-t
@@ -116,7 +119,7 @@ namespace BerAuto.Controllers
             }
         }
 
-        // Tov�bbi met�dusok v�ltozatlanok
+        // További metódusok változatlanok
         [HttpGet]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> MyRentals()

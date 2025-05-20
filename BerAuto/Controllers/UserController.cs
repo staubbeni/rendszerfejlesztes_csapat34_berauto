@@ -1,74 +1,146 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using BerAuto.Services;
-using BerAuto.DataContext.Dtos;
+using System;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using BerAuto.DataContext.Dtos;
+using BerAuto.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BerAuto.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IAddressService _addressService;
 
-        public UserController(IUserService userService, IAddressService addressService)
+        public UserController(IUserService userService)
         {
             _userService = userService;
-            _addressService = addressService;
         }
 
-        [HttpPost("register")]
+        [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(UserRegisterDto userDto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
-            var user = await _userService.RegisterAsync(userDto);
-            return Ok(user);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var user = await _userService.RegisterAsync(dto);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
-        [HttpPost("login")]
+        [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(UserLoginDto userDto)
+        public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
         {
-            var token = await _userService.LoginAsync(userDto);
-            return Ok(new { token });
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var (token, user) = await _userService.LoginAsync(dto);
+                return Ok(new { token, user });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("Invalid credentials.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPut("update-profile/{userId}")]
-        [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> UpdateProfile(int userId, UserUpdateDto userDto)
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(int userId, [FromBody] UserUpdateDto dto)
         {
-            var updatedUser = await _userService.UpdateProfileAsync(userId, userDto);
-            return Ok(updatedUser);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var updatedUser = await _userService.UpdateProfileAsync(userId, dto);
+                return Ok(updatedUser);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("User not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPut("update-address/{userId}")]
-        [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> UpdateAddress(int userId, AddressDto addressDto)
+        [Authorize]
+        public async Task<IActionResult> UpdateAddress(int userId, [FromBody] AddressDto dto)
         {
-            // Frissítjük a címet az AddressService használatával
-            await _addressService.CreateAddressAsync(addressDto, userId);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            // Visszaadjuk a frissített felhasználót
-            var updatedUser = await _userService.GetUserByIdAsync(userId);
-            return Ok(updatedUser);
+                var updatedUser = await _userService.UpdateAddressAsync(userId, dto);
+                return Ok(updatedUser);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("User not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
-        [HttpGet("roles")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetRoles()
+        [HttpGet("Address/current")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUserAddress()
         {
-            var roles = await _userService.GetRolesAsync();
-            return Ok(roles);
-        }
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Unauthorized("Invalid user.");
+                }
 
-        [HttpGet("all-users")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var users = await _userService.GetAllUsersAsync();
-            return Ok(users);
+                var user = await _userService.GetUserByIdAsync(userId);
+                var address = user.Address?.FirstOrDefault();
+                if (address == null)
+                {
+                    return NotFound("No address found for the user.");
+                }
+
+                return Ok(address);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("User not found.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
     }
 }

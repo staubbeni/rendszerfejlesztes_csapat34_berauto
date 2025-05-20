@@ -1,8 +1,15 @@
-// src/pages/RegisterPage.tsx
 import React, { useState } from "react";
-import { register } from "../api/user";
-import { UserRegisterDto, AddressDto } from "../models";
+import { register } from "../api/auth";
+import { UserRegisterDto } from "../models";
 import { useNavigate } from "react-router-dom";
+
+// Segítő típus az address mezők kezelésére
+interface AddressForm {
+  city: string;
+  street: string;
+  zipCode: string;
+  state: string;
+}
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState<UserRegisterDto>({
@@ -11,20 +18,39 @@ const RegisterPage: React.FC = () => {
     password: "",
     phoneNumber: "",
     roleIds: [2], // Customer role ID, confirm with backend
-    address: { city: "", street: "", zipCode: "", state: "" }, // NINCS id property
+    address: { city: "", street: "", zipCode: "", state: "" }, // Teljes inicializálás
   });
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Segítő függvény az address mezők frissítéséhez
+  const updateAddressField = (field: keyof AddressForm, value: string) => {
+    setFormData({
+      ...formData,
+      address: {
+        ...(formData.address || { city: "", street: "", zipCode: "", state: "" }),
+        [field]: value
+      } as AddressForm
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validáció: minden address mező kitöltött
+      if (!formData.address?.city || !formData.address?.street || !formData.address?.zipCode || !formData.address?.state) {
+        setError("Minden címmező kitöltése kötelező");
+        return;
+      }
       await register(formData);
       navigate("/login");
     } catch (err: any) {
-      setError(err.response?.data || "Hiba a regisztráció során");
+      setError(err.response?.data?.message || "Hiba a regisztráció során");
     }
   };
+
+  // Biztosítjuk, hogy az address létezik, de az inicializálás miatt ez mindig igaz
+  const address = formData.address || { city: "", street: "", zipCode: "", state: "" };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f6fb" }}>
@@ -83,12 +109,9 @@ const RegisterPage: React.FC = () => {
             <label style={{ fontWeight: 500 }}>Város:</label>
             <input
               type="text"
-              value={formData.address.city}
+              value={address.city}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({
-                  ...formData,
-                  address: { ...formData.address, city: e.target.value },
-                })
+                updateAddressField("city", e.target.value)
               }
               style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
               required
@@ -98,12 +121,9 @@ const RegisterPage: React.FC = () => {
             <label style={{ fontWeight: 500 }}>Utca:</label>
             <input
               type="text"
-              value={formData.address.street}
+              value={address.street}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({
-                  ...formData,
-                  address: { ...formData.address, street: e.target.value },
-                })
+                updateAddressField("street", e.target.value)
               }
               style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
               required
@@ -113,12 +133,9 @@ const RegisterPage: React.FC = () => {
             <label style={{ fontWeight: 500 }}>Irányítószám:</label>
             <input
               type="text"
-              value={formData.address.zipCode}
+              value={address.zipCode}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({
-                  ...formData,
-                  address: { ...formData.address, zipCode: e.target.value },
-                })
+                updateAddressField("zipCode", e.target.value)
               }
               style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
               required
@@ -128,12 +145,9 @@ const RegisterPage: React.FC = () => {
             <label style={{ fontWeight: 500 }}>Állam:</label>
             <input
               type="text"
-              value={formData.address.state}
+              value={address.state}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({
-                  ...formData,
-                  address: { ...formData.address, state: e.target.value },
-                })
+                updateAddressField("state", e.target.value)
               }
               style={{ margin: "10px 0", padding: "8px", borderRadius: 8, border: "1px solid #ccc", width: "100%" }}
               required

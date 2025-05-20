@@ -74,7 +74,12 @@ export interface UserRegisterDto {
   password: string;
   phoneNumber: string;
   roleIds: number[];
-  address: AddressDto;
+  address?: {
+    city: string;
+    street: string;
+    zipCode: string;
+    state: string;
+  };
 }
 
 export interface UserLoginDto {

@@ -9,7 +9,11 @@ namespace BerAuto.Services
         public AutoMapperProfile()
         {
             // User Mappings
-            CreateMap<User, UserDto>().ReverseMap();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.Rentals, opt => opt.MapFrom(src => src.Rentals))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.Name).ToList()));
+            CreateMap<UserDto, User>();
             CreateMap<UserRegisterDto, User>()
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address != null ? new List<Address> { new Address
                 {
@@ -21,7 +25,8 @@ namespace BerAuto.Services
             CreateMap<UserUpdateDto, User>();
             CreateMap<Address, AddressDto>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
-            CreateMap<AddressDto, Address>();
+            CreateMap<AddressDto, Address>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore()); // Hozzáadva az Id figyelmen kívül hagyásához
 
             // Car Mappings
             CreateMap<Car, CarDto>()
@@ -41,16 +46,16 @@ namespace BerAuto.Services
                 .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Model))
                 .ForMember(dest => dest.DailyRate, opt => opt.MapFrom(src => src.Price))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CarCategoryId))
-                .ForMember(dest => dest.IsAvailable, opt => opt.Ignore()) // Alapértelmezett az adatbázisban
-                .ForMember(dest => dest.Odometer, opt => opt.Ignore());  // Alapértelmezett az adatbázisban
+                .ForMember(dest => dest.IsAvailable, opt => opt.Ignore())
+                .ForMember(dest => dest.Odometer, opt => opt.Ignore());
 
             CreateMap<CarUpdateDto, Car>()
                 .ForMember(dest => dest.Brand, opt => opt.MapFrom(src => src.Make))
                 .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.Model))
                 .ForMember(dest => dest.DailyRate, opt => opt.MapFrom(src => src.Price.HasValue ? src.Price.Value : 0))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CarCategoryId))
-                .ForMember(dest => dest.IsAvailable, opt => opt.Ignore()) // Nem módosítható DTO-n keresztül
-                .ForMember(dest => dest.Odometer, opt => opt.Ignore());  // Nem módosítható DTO-n keresztül
+                .ForMember(dest => dest.IsAvailable, opt => opt.Ignore())
+                .ForMember(dest => dest.Odometer, opt => opt.Ignore());
 
             CreateMap<CarCategory, CarCategoryDto>();
 
@@ -62,7 +67,7 @@ namespace BerAuto.Services
             CreateMap<RentalRequestDto, Rental>()
                 .ForMember(dest => dest.From, opt => opt.MapFrom(src => src.From))
                 .ForMember(dest => dest.To, opt => opt.MapFrom(src => src.To))
-                .ForMember(dest => dest.TotalCost, opt => opt.Ignore()); // TotalCost külön számítódik
+                .ForMember(dest => dest.TotalCost, opt => opt.Ignore());
 
             // Role Mappings
             CreateMap<Role, RoleDto>();
