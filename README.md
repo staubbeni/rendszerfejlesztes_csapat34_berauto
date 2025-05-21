@@ -1,15 +1,35 @@
-<h1 align="center" id="title">BérAutó</h1>
+# 🚗 Bérautó
 
-<h2>Start with docker:</h2>
+## 🛠️ Telepítés
 
-<p>1. Install docker engine</p>
-<p>2. Build the dockerfile: "docker build -t berauto-app:latest -f BerAuto/Dockerfile ."</p>
-<p>3. Start the container: "docker run -d -p 8080:8080 --name berauto-container -e "ASPNETCORE_URLS=http://+:8080" -e "ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=CarRentalDB;User Id=admin;Password=test123;TrustServerCertificate=True" berauto-app:latest"</p>
+### Frontend indítása
 
-<h2>Start with docker compose:</h2>
-<p>1. Install docker engine</p>
+A frontend futtatásához kövesd az alábbi lépéseket:
 
-<p>2. Edit docker-compose.yml in the BerAuto directory(change connection string)</p>
+1. Navigálj a frontend mappába:
 
-<p>3. docker-compose up</p>
+   ```bash
+   cd /Berauto/berauto-frontend
+   ```
 
+2. Telepítsd a függőségeket és indítsd el az alkalmazást:
+
+   ```bash
+   npm install && npm start
+   ```
+
+### Docker Compose használata
+
+A projekt Docker Compose segítségével is futtatható. Kövesd az alábbi lépéseket:
+
+1. Telepítsd a **Docker Engine**-t a rendszeredre: Docker telepítési útmutató.
+
+2. Szerkeszd a `docker-compose.yml` fájlt a `Berauto` mappában:
+
+   - Módosítsd a kapcsolati stringet (connection string) a környezetednek megfelelően.
+
+3. Indítsd el a konténereket:
+
+   ```bash
+   docker-compose up
+   ```
