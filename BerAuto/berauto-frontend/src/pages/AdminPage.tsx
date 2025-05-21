@@ -268,13 +268,6 @@ const AdminPage: React.FC = () => {
           );
         })}
       </div>
-
-      <h3 style={{ marginTop: 40 }}>Szerepek listája</h3>
-      <ul>
-        {roles.map((role: RoleDto) => (
-          <li key={role.id}>{role.name}</li>
-        ))}
-      </ul>
     </div>
   );
 };

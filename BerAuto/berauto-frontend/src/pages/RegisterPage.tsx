@@ -142,7 +142,7 @@ const RegisterPage: React.FC = () => {
             />
           </div>
           <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 500 }}>Állam:</label>
+            <label style={{ fontWeight: 500 }}>Megye:</label>
             <input
               type="text"
               value={address.state}
