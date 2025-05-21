@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using BerAuto.DataContext.Entities;
 
 namespace BerAuto.DataContext.Dtos
 {
@@ -26,6 +24,7 @@ namespace BerAuto.DataContext.Dtos
 
     public class RentalDto
     {
+        public int Id { get; set; } // Hozzáadva
         [Required]
         public int CarId { get; set; }
         [Required]
@@ -42,5 +41,7 @@ namespace BerAuto.DataContext.Dtos
         public string GuestPhone { get; set; }
         [Required(ErrorMessage = "Guest address is required")]
         public string GuestAddress { get; set; }
+        [Required]
+        public string Status { get; set; } // Hozzáadva
     }
 }

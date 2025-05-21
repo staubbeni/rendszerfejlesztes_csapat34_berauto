@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace BerAuto.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     public class RentalController : ControllerBase
     {
         private readonly IRentalService _rentalService;
@@ -24,7 +24,7 @@ namespace BerAuto.Controllers
             _context = context;
         }
 
-        [HttpPost]
+        [HttpPost("RequestRental")]
         [AllowAnonymous]
         public async Task<IActionResult> RequestRental([FromBody] RentalRequestDto dto)
         {
@@ -119,8 +119,7 @@ namespace BerAuto.Controllers
             }
         }
 
-        // További metódusok változatlanok
-        [HttpGet]
+        [HttpGet("MyRentals")]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> MyRentals()
         {
@@ -141,7 +140,7 @@ namespace BerAuto.Controllers
             return Ok(list);
         }
 
-        [HttpGet]
+        [HttpGet("List")]
         [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> List()
             => Ok(await _rentalService.GetAllRentalsAsync());

@@ -26,7 +26,7 @@ namespace BerAuto.Services
             CreateMap<Address, AddressDto>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             CreateMap<AddressDto, Address>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore()); // Hozzáadva az Id figyelmen kívül hagyásához
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             // Car Mappings
             CreateMap<Car, CarDto>()
@@ -61,8 +61,10 @@ namespace BerAuto.Services
 
             // Rental Mappings
             CreateMap<Rental, RentalDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.From, opt => opt.MapFrom(src => src.From))
-                .ForMember(dest => dest.To, opt => opt.MapFrom(src => src.To));
+                .ForMember(dest => dest.To, opt => opt.MapFrom(src => src.To))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
             CreateMap<RentalDto, Rental>();
             CreateMap<RentalRequestDto, Rental>()
                 .ForMember(dest => dest.From, opt => opt.MapFrom(src => src.From))

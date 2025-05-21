@@ -1,4 +1,3 @@
-// src/api/rentals.ts
 import axios from "axios";
 import { RentalDto, RentalRequestDto } from "../models";
 
