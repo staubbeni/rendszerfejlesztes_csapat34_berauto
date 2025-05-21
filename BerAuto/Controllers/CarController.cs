@@ -70,7 +70,7 @@ namespace BerAuto.Controllers
         }
 
         // Admin és Employee: elérhetőség állítása
-        [HttpPut("SetAvailability/{id}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Employee,Admin")]
         public async Task<IActionResult> SetAvailability(int id, [FromQuery] bool available)
         {
@@ -81,7 +81,7 @@ namespace BerAuto.Controllers
         }
 
         // Csak Admin: kilométeróra állás módosítása
-        [HttpPut("UpdateOdometer/{id}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOdometer(int id, [FromQuery] int newReading)
         {

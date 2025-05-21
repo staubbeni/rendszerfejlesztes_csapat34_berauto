@@ -9,6 +9,8 @@ import { getCurrentUserAddress } from "../api/user";
 
 const RentalRequestPage: React.FC = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
+  // Determine if user is Admin or Employee
+  const isAdminOrEmployee = isAuthenticated && user && user.roles && (user.roles.includes("Admin") || user.roles.includes("Employee"));
   const [cars, setCars] = useState<CarDto[]>([]);
   const [loadingCars, setLoadingCars] = useState<boolean>(true);
   const [userAddress, setUserAddress] = useState<string>("");
@@ -113,11 +115,25 @@ const RentalRequestPage: React.FC = () => {
     }
   };
 
+  if (isAdminOrEmployee) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f6fb" }}>
+        <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.10)", padding: 32, minWidth: 340, maxWidth: 400, width: "100%", textAlign: "center" }}>
+          <h2 style={{ marginBottom: 24 }}>Kölcsönzési igény</h2>
+          <p style={{ color: "#f44336", fontWeight: 500, fontSize: 18 }}>
+            Admin vagy dolgozó felhasználók nem adhatnak le kölcsönzési igényt.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f6fb" }}>
       <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.10)", padding: 32, minWidth: 340, maxWidth: 400, width: "100%" }}>
         <h2 style={{ textAlign: "center", marginBottom: 24 }}>Kölcsönzési igény</h2>
         <form onSubmit={handleSubmit}>
+          {/* --- the original form code remains unchanged here --- */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ fontWeight: 500 }}>Autó kiválasztása:</label>
             {loadingCars ? (
