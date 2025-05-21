@@ -18,7 +18,7 @@ A frontend futtatásához kövesd az alábbi lépéseket:
    npm install && npm start
    ```
 
-### Docker Compose használata
+### Docker Compose használata (deprecated)
 
 A projekt Docker Compose segítségével is futtatható. Kövesd az alábbi lépéseket:
 
