@@ -174,7 +174,7 @@ const AdminPage: React.FC = () => {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(car.id, "model", e.target.value)}
                   style={{ fontWeight: 600, fontSize: 20, border: "none", background: "#f7f7f7", borderRadius: 6, padding: "4px 8px" }}
                 />
-                <span style={{ color: "#888", fontWeight: 400, marginLeft: 8 }}>({car.year})</span>
+
               </div>
               <div style={{ marginBottom: 8, color: "#555" }}>
                 Kategória: <select

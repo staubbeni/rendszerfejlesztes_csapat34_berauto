@@ -61,7 +61,7 @@ const CarsPage: React.FC = () => {
                 }}
               >
                 <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 8 }}>
-                  {car.make} {car.model} <span style={{ color: "#888", fontWeight: 400 }}>({car.year})</span>
+                  {car.make} {car.model}
                 </div>
                 <div style={{ marginBottom: 8, color: "#555" }}>
                   Kategória: {category ? category.name : "-"}
