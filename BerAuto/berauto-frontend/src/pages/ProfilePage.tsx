@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.tsx
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { updateProfile, updateAddress, getCurrentUserAddress } from "../api/user";
@@ -23,7 +22,13 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ name: user.name, email: "", phoneNumber: "", roleIds: [] });
+      // Initialize profileData with user data
+      setProfileData({
+        name: user.name || "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+        roleIds: user.roles ? user.roles.map((role: any) => role.id) : [],
+      });
       const fetchAddress = async () => {
         try {
           const address = await getCurrentUserAddress();
